@@ -10,7 +10,7 @@ public class RoomManager : MonoBehaviour
 
     void Start() {
         currentRoom.Generate(RoomConfig.Default());
-        nextRoom.Generate(GenerateNextConfig(RoomConfig.Default()));
+       // nextRoom.Generate(GenerateNextConfig(RoomConfig.Default()));
     }
 
     // called when player crosses room threshold

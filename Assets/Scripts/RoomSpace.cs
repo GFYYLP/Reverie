@@ -44,26 +44,31 @@ public class RoomSpace : MonoBehaviour
 
         sdfShader.SetBuffer(kernel, "densityValues", densityBuffer);
         sdfShader.SetInt("gridSize", GridSize);
-
-        //grammar parameters 
+        
+        // //grammar parameters 
         sdfShader.SetFloat("spikeScore",     config.spikeScore);
         sdfShader.SetFloat("symmetryScore",  config.symmetryScore);
         sdfShader.SetFloat("verticalStretch",config.verticalityScore);
         sdfShader.SetFloat("roomScale",      config.roomScale);
-
+        
         int threads = Mathf.CeilToInt(GridSize / 8f);
         sdfShader.Dispatch(kernel, threads, threads, threads);
     }
 
     void RunMarchingCubes() {
-        int kernel = marchingShader.FindKernel("CSMain");
+        int kernel = marchingShader.FindKernel("March");
 
         triangleBuffer.SetCounterValue(0);
 
-        marchingShader.SetBuffer(kernel, "densityValues", densityBuffer);
-        marchingShader.SetBuffer(kernel, "triangles",     triangleBuffer);
-        marchingShader.SetInt(   "gridSize",              GridSize);
-        marchingShader.SetFloat( "isoLevel",              IsoLevel);
+        // marchingShader.SetBuffer(kernel, "densityValues", densityBuffer);
+        // marchingShader.SetBuffer(kernel, "triangles",     triangleBuffer);
+        // marchingShader.SetInt(   "gridSize",              GridSize);
+        // marchingShader.SetFloat( "isoLevel",              IsoLevel);
+        
+        marchingShader.SetBuffer (0, "points", densityBuffer);
+        marchingShader.SetBuffer (0, "triangles", triangleBuffer);
+        marchingShader.SetInt ("numPointsPerAxis", GridSize);
+        marchingShader.SetFloat ("isoLevel", IsoLevel);
 
         int threads = Mathf.CeilToInt(GridSize / 8f);
         marchingShader.Dispatch(kernel, threads, threads, threads);
