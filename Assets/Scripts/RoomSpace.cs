@@ -45,7 +45,7 @@ public class RoomSpace : MonoBehaviour
         sdfShader.SetBuffer(kernel, "densityValues", densityBuffer);
         sdfShader.SetInt("gridSize", GridSize);
 
-        // your grammar parameters go here
+        //grammar parameters 
         sdfShader.SetFloat("spikeScore",     config.spikeScore);
         sdfShader.SetFloat("symmetryScore",  config.symmetryScore);
         sdfShader.SetFloat("verticalStretch",config.verticalityScore);
