@@ -10,10 +10,10 @@ public class RoomConfig {
     public float roomScale;
 
     // default for first room: blank slate, monotone world
-    public static RoomConfig Default() => new RoomConfig {
-        spikeScore        = 0f,
-        symmetryScore     = 0.5f,
-        verticalityScore  = 0.5f,
-        roomScale         = 1f
-    };
+    // public static RoomConfig Default() => new RoomConfig {
+    //     spikeScore        = 0f,
+    //     symmetryScore     = 0.5f,
+    //     verticalityScore  = 0.5f,
+    //     roomScale         = 1f
+    // };
 }

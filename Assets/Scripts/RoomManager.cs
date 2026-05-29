@@ -4,13 +4,23 @@ using UnityEngine;
 
 public class RoomManager : MonoBehaviour
 {
+    public RoomConfig roomConfig;
     public RoomSpace prevRoom;
     public RoomSpace currentRoom;
     public RoomSpace nextRoom;
 
     void Start() {
-        currentRoom.Generate(RoomConfig.Default());
-       // nextRoom.Generate(GenerateNextConfig(RoomConfig.Default()));
+        //roomConfig = RoomConfig.Default();
+        currentRoom.Generate(roomConfig);
+       // nextRoom.Generate(GenerateNextConfig(roomConfig));
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.G))
+        {
+            currentRoom.Generate(roomConfig);
+        }
     }
 
     // called when player crosses room threshold
@@ -24,8 +34,8 @@ public class RoomManager : MonoBehaviour
         nextRoom.Generate(incomingConfig);
     }
 
-    RoomConfig GenerateNextConfig(RoomConfig last) {
-        // placeholder — this is where grammar vector feeds in later
-        return RoomConfig.Default();
-    }
+    // RoomConfig GenerateNextConfig(RoomConfig last) {
+    //     // placeholder — this is where grammar vector feeds in later
+    //     return RoomConfig.Default();
+    // }
 }

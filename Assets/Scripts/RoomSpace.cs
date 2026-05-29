@@ -24,7 +24,7 @@ public class RoomSpace : MonoBehaviour
         int pointCount = GridSize * GridSize * GridSize;
         int maxTris    = pointCount * 5;
 
-        densityBuffer  = new ComputeBuffer(pointCount, sizeof(float));
+        densityBuffer  = new ComputeBuffer(pointCount, sizeof(float) * 4);
         triCountBuffer = new ComputeBuffer(1, sizeof(int), ComputeBufferType.Raw);
         triangleBuffer = new ComputeBuffer(maxTris, sizeof(float) * 9, ComputeBufferType.Append);
     }
@@ -65,8 +65,8 @@ public class RoomSpace : MonoBehaviour
         // marchingShader.SetInt(   "gridSize",              GridSize);
         // marchingShader.SetFloat( "isoLevel",              IsoLevel);
         
-        marchingShader.SetBuffer (0, "points", densityBuffer);
-        marchingShader.SetBuffer (0, "triangles", triangleBuffer);
+        marchingShader.SetBuffer (kernel, "points", densityBuffer);
+        marchingShader.SetBuffer (kernel, "triangles", triangleBuffer);
         marchingShader.SetInt ("numPointsPerAxis", GridSize);
         marchingShader.SetFloat ("isoLevel", IsoLevel);
 
@@ -88,11 +88,11 @@ public class RoomSpace : MonoBehaviour
 
         for (int i = 0; i < count; i++) {
             vertices[i * 3 + 0] = tris[i].a;
-            vertices[i * 3 + 1] = tris[i].b;
-            vertices[i * 3 + 2] = tris[i].c;
-            indices [i * 3 + 0] = i * 3 + 0;
-            indices [i * 3 + 1] = i * 3 + 1;
-            indices [i * 3 + 2] = i * 3 + 2;
+            vertices[i * 3 + 1] = tris[i].c; // swapped
+            vertices[i * 3 + 2] = tris[i].b; // swapped
+            indices[i * 3 + 0] = i * 3 + 0;
+            indices[i * 3 + 1] = i * 3 + 1;
+            indices[i * 3 + 2] = i * 3 + 2;
         }
 
         Mesh mesh = new Mesh();
