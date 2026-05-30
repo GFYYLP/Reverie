@@ -9,6 +9,8 @@ public class RoomManager : MonoBehaviour
     public RoomSpace currentRoom;
     public RoomSpace nextRoom;
 
+    public bool dynamicRegen = false;
+    
     void Start() {
         //roomConfig = RoomConfig.Default();
         currentRoom.Generate(roomConfig);
@@ -17,7 +19,11 @@ public class RoomManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.G))
+        if (!dynamicRegen && Input.GetKeyDown(KeyCode.G))
+        {
+            currentRoom.Generate(roomConfig);
+        }
+        if (dynamicRegen && Time.frameCount % 3 == 0)
         {
             currentRoom.Generate(roomConfig);
         }

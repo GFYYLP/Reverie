@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer))]
+[RequireComponent(typeof(MeshFilter), typeof(MeshRenderer), typeof(MeshCollider))]
 public class RoomSpace : MonoBehaviour
 {
     [Header("Compute")]
@@ -105,6 +105,9 @@ public class RoomSpace : MonoBehaviour
         mesh.RecalculateNormals();
 
         GetComponent<MeshFilter>().mesh = mesh;
+        
+        var collider = GetComponent<MeshCollider>();
+        collider.sharedMesh = mesh;
     }
 
     void OnDestroy() {
