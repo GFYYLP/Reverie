@@ -54,20 +54,79 @@ float noise(float3 p) {
 }
 
 
+float corridorSDF(float3 p) {
+    float3 entry   = float3(0.0, -0.1, -1.0) * roomScale;
+    float3 exit    = float3(0.0, -0.1,  1.0) * roomScale;
+    float3 axis    = exit - entry;
+    float  t       = clamp(dot(p - entry, axis) / dot(axis, axis), 0.0, 1.0);
+    float3 closest = entry + t * axis;
+    return length(p - closest) - 0.35 * roomScale; // scale radius with room
+}
+
+
+// grammar uniforms already set from C#
+float densityScore;
+float fragmentationScore;
+float radialScore;
+
+// reuse your existing hash function for deterministic noise
+float3 hash3(float3 p) {
+    return frac(sin(float3(
+        dot(p, float3(127.1, 311.7, 74.7)),
+        dot(p, float3(269.5, 183.3, 246.1)),
+        dot(p, float3(113.5, 271.9, 124.6))
+    )) * 43758.5453);
+}
+
+float3 objectPosition(int i, int count) {
+    float t     = (float)i / count;
+    float angle = t * 6.28318; // 2PI
+
+    // radial ring
+    float3 radial = float3(cos(angle), 0.0, sin(angle)) * 0.6;
+
+    // vertical stack
+    float3 vertical = float3(0.0, lerp(-0.5, 0.5, t), 0.0);
+
+    // grid
+    int gridW = (int)ceil(sqrt((float)count));
+    float3 grid = float3(
+        (float)(i % gridW) / gridW - 0.5,
+        0.0,
+        (float)(i / gridW) / gridW - 0.5
+    );
+
+    // blend patterns by grammar
+    float3 pos = lerp(radial, vertical, verticalityScore);
+    pos = lerp(pos,    grid,     1.0 - radialScore);
+
+    // fragmentation variance — deterministic per index
+    float3 variance = (hash3(float3(i, i*2, i*3)) * 2.0 - 1.0)
+                      * lerp(0.0, 0.4, fragmentationScore);
+
+    return (pos + variance) * roomScale;
+}
 
 float sceneSDF(float3 p) {
-    // vertical stretch driven by verticality score
-    float3 stretchedP = p * float3(1.0, lerp(0.5, 2.5, verticalityScore), 1.0);
+    int count = (int)round(lerp(4, 16, densityScore));
+    float d   = 1e10;
 
-    // base shape: sphere blended toward cone by spike score
-    float sphere = sdSphere(stretchedP, 0.6);
-    float cone   = sdCone(stretchedP, lerp(0.2, 0.7, spikeScore), 1.0);
-    float base   = sdfSmoothUnion(sphere, cone, lerp(0.4, 0.05, spikeScore));
+    for (int i = 0; i < count; i++) {
+        float3 origin  = objectPosition(i, count);
+        float3 localP  = p - origin;
+        float3 stretched = localP * float3(1.0, lerp(0.5, 2.5, verticalityScore), 1.0);
 
-    // noise displacement: more displacement with less symmetry
-    float displacement = noise(p * 2.5) * (1.0 - symmetryScore) * 0.4;
+        float scale  = 0.2 + hash3(float3(i, i+1, i+2)).x * 0.15;
+        float sphere = sdSphere(stretched, scale);
+        float cone   = sdCone(stretched, lerp(0.2, 0.7, spikeScore), scale * 1.5);
+        float obj    = sdfSmoothUnion(sphere, cone, max(lerp(0.3, 0.05, spikeScore), 0.08));
 
-    return base + displacement;
+        obj += noise(localP * 3.0) * (1.0 - symmetryScore) * 0.2;
+
+        d = sdfUnion(d, obj);
+    }
+
+    return d;
 }
 
 int indexOf(int x, int y, int z) {

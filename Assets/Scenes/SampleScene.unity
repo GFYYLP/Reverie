@@ -476,7 +476,7 @@ MonoBehaviour:
     spikeScore: 2.53
     symmetryScore: 4.06
     verticalityScore: 6.98
-    roomScale: 5.05
+    roomScale: 6.6
   prevRoom: {fileID: 0}
   currentRoom: {fileID: 1383670675}
   nextRoom: {fileID: 0}

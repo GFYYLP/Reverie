@@ -8,6 +8,9 @@ public class RoomConfig {
     public float symmetryScore;
     public float verticalityScore;
     public float roomScale;
+    public float densityScore;
+    public float fragmentationScore;
+    public float radialScore;
 
     // default for first room: blank slate, monotone world
     // public static RoomConfig Default() => new RoomConfig {
