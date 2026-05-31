@@ -7,19 +7,22 @@ using UnityEngine.UI;
 public class Snapshot : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler {
     
-    public Texture2D capturedTexture; // the type B snapshot stored here
+    public RenderTexture capturedTexture;
     RawImage display;
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
 
     void Awake() {
         display = GetComponent<RawImage>();
-        canvas  = GetComponentInParent<Canvas>();
+    }
+    
+    void Start() {
+        canvas = GetComponentInParent<Canvas>(); // hierarchy is ready by Start
     }
 
-    public void StoreCapture(Texture2D tex) {
-        capturedTexture = tex;
-        display.texture = tex;
+    public void StoreCapture(RenderTexture rt) {
+        capturedTexture = rt;
+        display.texture = rt; // RawImage.texture accepts RenderTexture directly
     }
 
     public void OnBeginDrag(PointerEventData e) {

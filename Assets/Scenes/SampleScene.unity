@@ -562,7 +562,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   slots: []
-  slotPrefab: {fileID: 5617653380327610222, guid: a9dcb7c2ec236f94cbbf2ab59ef13963,
+  slotPrefab: {fileID: 8092729888317412813, guid: 9db5854dd61bdcb40b0f65f56599b8de,
     type: 3}
   slotCount: 25
   canvasSize: 256
