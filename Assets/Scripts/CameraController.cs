@@ -18,11 +18,22 @@ public class CameraController : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
     }
 
-    void Update()
+    // void Update()
+    // {
+    //     HandleMovement();
+    //     HandleMouseLook();
+    //     HandleCursorToggle();
+    //     HandleZooming();
+    // }
+
+    void HandleZooming()
     {
-        HandleMovement();
-        HandleMouseLook();
-        HandleCursorToggle();
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (scroll != 0)
+        {
+            Camera.main.fieldOfView -= scroll * 10f; // Adjust zoom speed as needed
+            Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView, 20f, 100f); // Limit zoom range
+        }
     }
 
     void HandleMovement()

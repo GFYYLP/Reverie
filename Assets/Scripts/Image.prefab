@@ -35,8 +35,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -38.128723, y: -58.629333}
-  m_SizeDelta: {x: 100, y: 100}
+  m_AnchoredPosition: {x: -326.74014, y: -183.51355}
+  m_SizeDelta: {x: 64.5197, y: 62.9729}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5004085128290375543
 CanvasRenderer:
@@ -59,6 +59,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   capturedTexture: {fileID: 0}
+  cropScale: 0.63
 --- !u!114 &1299214995105341954
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -21,10 +21,22 @@ public class Snapshot : MonoBehaviour,
     }
 
     public void StoreCapture(RenderTexture rt) {
-        if (rt == null) Debug.Log("Capture texture is null");
-        if (display == null) Debug.Log("dis  is null");
         capturedTexture = rt;
-        display.texture = rt; // RawImage.texture accepts RenderTexture directly
+        display.texture = rt;
+    
+        // calculate the centered square region in UV space
+        float aspect = (float)rt.width / rt.height;
+        if (aspect > 1f) {
+            // wider than tall: crop sides
+            float uvWidth = (float)rt.height / rt.width;
+            float uvX = (1f - uvWidth) * 0.5f;
+            display.uvRect = new Rect(uvX, 0f, uvWidth, 1f);
+        } else {
+            // taller than wide: crop top and bottom
+            float uvHeight = (float)rt.width / rt.height;
+            float uvY = (1f - uvHeight) * 0.5f;
+            display.uvRect = new Rect(0f, uvY, 1f, uvHeight);
+        }
     }
 
     public void OnBeginDrag(PointerEventData e) {
