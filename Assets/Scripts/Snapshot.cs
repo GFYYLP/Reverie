@@ -21,6 +21,8 @@ public class Snapshot : MonoBehaviour,
     }
 
     public void StoreCapture(RenderTexture rt) {
+        if (rt == null) Debug.Log("Capture texture is null");
+        if (display == null) Debug.Log("dis  is null");
         capturedTexture = rt;
         display.texture = rt; // RawImage.texture accepts RenderTexture directly
     }

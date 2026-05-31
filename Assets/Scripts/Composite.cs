@@ -28,7 +28,10 @@ public class Composite : MonoBehaviour
         slots = new Snapshot[slotCount];
         for (int i = 0; i < slotCount; i++) {
             GameObject obj = Instantiate(slotPrefab, transform);
-            slots[i] = obj.GetComponent<Snapshot>();
+            Snapshot snap = obj.GetComponent<Snapshot>();
+            if (snap == null) Debug.LogError($"Slot {i} prefab missing Snapshot component");
+            else Debug.Log("i hate this");
+            slots[i] = snap;
         }
     }
 
@@ -82,5 +85,10 @@ public class Composite : MonoBehaviour
 
     void OnDestroy() {
         compositeRT?.Release();
+        cameraRT?.Release();
+        slots = null;
+        
+        //cleanup target texture
+        // Camera.main.targetTexture = null;
     }
 }
