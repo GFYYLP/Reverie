@@ -1,39 +1,49 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class Movement : MonoBehaviour {
     [Header("Movement")]
-    [SerializeField] float moveSpeed = 5f;
-    [SerializeField] float verticalSpeed = 3f;
+    [SerializeField] private float moveSpeed    = 5f;
+    [SerializeField] private float jumpForce    = 5f;
+    [SerializeField] private float gravity      = 9.81f;
 
     [Header("Look")]
-    [SerializeField] float mouseSensitivity = 1.5f;
-    [SerializeField] float maxPitch         = 89f;
+    [SerializeField] private float mouseSensitivity = 1.5f;
+    [SerializeField] private float maxPitch         = 89f;
 
     [Header("Bob")]
-    [SerializeField] Transform cameraHolder;
-    [SerializeField] float bobFrequency  = 1.4f;
-    [SerializeField] float bobAmplitudeY = 0.05f;
-    [SerializeField] float bobAmplitudeX = 0.025f;
-    [SerializeField] float bobSmoothing  = 8f;
+    [SerializeField] private float bobFrequency  = 1.4f;
+    [SerializeField] private float bobAmplitudeY = 0.05f;
+    [SerializeField] private float bobAmplitudeX = 0.025f;
+    [SerializeField] private float bobSmoothing  = 8f;
 
-    float pitch;
-    float bobTimer;
-    Vector3 currentBob;
-    Vector3 targetBob;
+    [Header("Sway")]
+    [SerializeField] private float swayAmount    = 0.01f;
+    [SerializeField] private float swaySpeed     = 0.8f;
+    [SerializeField] private float swaySmoothing = 3f;
+
+    Vector3 currentSway;
+    
+    private CharacterController cc;
+    private Transform cam;
+    private float pitch;
+    private float verticalVelocity;
+    private float bobTimer;
+    private Vector3 currentBob;
 
     void Awake() {
+        cc  = GetComponent<CharacterController>();
+        cam = Camera.main.transform;
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible   = false;
-        
-        cameraHolder = Camera.main.transform;
     }
 
     void Update() {
         Look();
         Move();
         Bob();
+        Sway();
     }
 
     void Look() {
@@ -43,45 +53,33 @@ public class Movement : MonoBehaviour {
         pitch = Mathf.Clamp(pitch + mouseY, -maxPitch, maxPitch);
 
         transform.Rotate(Vector3.up * mouseX);
-        cameraHolder.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        cam.localRotation = Quaternion.Euler(pitch, 0f, 0f);
     }
 
     void Move() {
-        Vector3 input = new Vector3(
-            Input.GetAxis("Horizontal"),
-            0f,
-            Input.GetAxis("Vertical")
-        );
+        float h = Input.GetAxis("Horizontal");
+        float v = Input.GetAxis("Vertical");
 
-        // vertical flight
-        if (Input.GetKey(KeyCode.E)) input.y =  1f;
-        if (Input.GetKey(KeyCode.Q)) input.y = -1f;
+        Vector3 move = (transform.right * h + transform.forward * v).normalized * moveSpeed;
 
-        if (input.magnitude > 1f) input.Normalize();
+        if (cc.isGrounded) {
+            verticalVelocity = Input.GetKeyDown(KeyCode.Space) ? jumpForce : -2f;
+        } else {
+            verticalVelocity -= gravity * Time.deltaTime;
+        }
 
-        // move relative to camera facing, including pitch for vertical flight feel
-        Vector3 forward = cameraHolder.forward;
-        Vector3 right   = cameraHolder.right;
-        Vector3 move    = (forward * input.z + right * input.x) * moveSpeed
-                        + Vector3.up * input.y * verticalSpeed;
-
-        transform.position += move * Time.deltaTime;
+        move.y = verticalVelocity;
+        cc.Move(move * Time.deltaTime);
     }
 
     void Bob() {
-        Vector3 velocity = new Vector3(
-            transform.position.x, 0f, transform.position.z
-        );
-
-        // approximate horizontal speed from position delta
         float speed = new Vector3(
-            Input.GetAxis("Horizontal"),
-            0f,
-            Input.GetAxis("Vertical")
+            Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical")
         ).magnitude * moveSpeed;
 
-        bool isMoving = speed > 0.1f;
+        bool isMoving = speed > 0.1f && cc.isGrounded;
 
+        Vector3 targetBob;
         if (isMoving) {
             bobTimer += Time.deltaTime * bobFrequency;
             targetBob = new Vector3(
@@ -94,6 +92,19 @@ public class Movement : MonoBehaviour {
         }
 
         currentBob = Vector3.Lerp(currentBob, targetBob, Time.deltaTime * bobSmoothing);
-        cameraHolder.localPosition = currentBob;
+        cam.localPosition = currentBob + currentSway;
+    }
+    
+    void Sway() {
+        float timeX = Time.time * swaySpeed;
+        float timeY = Time.time * swaySpeed + 100f;  // offset so X and Y aren't in sync
+
+        Vector3 targetSway = new Vector3(
+            (Mathf.PerlinNoise(timeX,        0f) - 0.5f) * swayAmount,
+            (Mathf.PerlinNoise(timeY,        0f) - 0.5f) * swayAmount,
+            (Mathf.PerlinNoise(timeX + timeY, 0f) - 0.5f) * swayAmount * 0.5f  // subtle roll
+        );
+
+        currentSway = Vector3.Lerp(currentSway, targetSway, Time.deltaTime * swaySmoothing);
     }
 }

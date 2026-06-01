@@ -10,11 +10,15 @@ public class RoomManager : MonoBehaviour
     public RoomSpace nextRoom;
 
     public bool dynamicRegen = false;
+
+    private Transform playerPos;
     
     void Start() {
         //roomConfig = RoomConfig.Default();
         currentRoom.Generate(roomConfig);
        // nextRoom.Generate(GenerateNextConfig(roomConfig));
+
+       playerPos = Camera.main.transform;
     }
 
     void Update()

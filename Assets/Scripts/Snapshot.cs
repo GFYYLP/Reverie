@@ -11,6 +11,8 @@ public class Snapshot : MonoBehaviour,
     RawImage display;
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
+    
+    public float snapShotSize = 0.5f;
 
     void Awake() {
         display = GetComponent<RawImage>();
