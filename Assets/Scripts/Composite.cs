@@ -40,26 +40,35 @@ public class Composite : MonoBehaviour
 
     private void LateUpdate()
     {
+        float scroll = Input.GetAxis("Mouse ScrollWheel");
+        if (scroll != 0)
+        {
+            // Camera.main.fieldOfView -= scroll * 10f; // Adjust zoom speed as needed
+            // Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView, 20f, 100f); // Limit zoom range
+            
+            captureSize = Mathf.Clamp(captureSize - scroll * 0.1f, 0.1f, 1f);
+        }
+        
         if (Input.GetKeyDown(KeyCode.E))
         {
             RenderTexture rt = new RenderTexture(512, 512, 24);
 
-// store original state
+            // store original state
             float originalAspect = Camera.main.aspect;
             float originalFOV    = Camera.main.fieldOfView;
 
-// force square aspect — this correctly constrains the frustum
+            // force square aspect to constrain the frustum
             Camera.main.aspect = 1f;
 
-// optionally narrow FOV to match captureSize crop feeling
-// smaller captureSize = more zoomed in
+            // optionally narrow FOV to match captureSize crop feeling
+            // smaller captureSize = more zoomed in
             Camera.main.fieldOfView = originalFOV * captureSize;
 
             Camera.main.targetTexture = rt;
             Camera.main.Render();
             Camera.main.targetTexture = null;
 
-// restore
+            // restore
             Camera.main.aspect         = originalAspect;
             Camera.main.fieldOfView    = originalFOV;
         
@@ -108,4 +117,6 @@ public class Composite : MonoBehaviour
         //cleanup target texture
         // Camera.main.targetTexture = null;
     }
+    
+    public float CaptureSize => captureSize;
 }
