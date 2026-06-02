@@ -26,21 +26,25 @@ public class CanvasManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButton(0)) {
+        if (Input.GetMouseButtonDown(0)) {
             StartCoroutine(AnimateIn());
             inCamera = true;
         }
-        // else
-        // {
-        //     StartCoroutine(AnimateOut());
-        //     inCamera = false;
-        // }
+        
+        if (Input.GetMouseButtonUp(0))
+        {
+            StartCoroutine(AnimateOut());
+            inCamera = false;
+        }
+        
+
     }
     
     IEnumerator AnimateIn()
     {
+        //convert to non-normalized screen-space coord
         float captureRegionSize = composite.CaptureSize * Mathf.Min(Screen.width, Screen.height);
-        float duration = 0.5f;
+        float duration = 0.2f;
         
         float t = 0f;
         float targetHeight = (Screen.height - captureRegionSize) * 0.5f;
@@ -61,7 +65,7 @@ public class CanvasManager : MonoBehaviour
     
     IEnumerator AnimateOut()
     {
-        float duration = 0.5f;
+        float duration = 0.2f;
         float t = 0f;
 
         while (t < 1f) {

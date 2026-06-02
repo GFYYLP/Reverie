@@ -27,6 +27,7 @@ public class Movement : MonoBehaviour {
     private CharacterController cc;
     private Transform cam;
     private float pitch;
+    private float yaw;
     private float verticalVelocity;
     private float bobTimer;
     private Vector3 currentBob;
@@ -50,10 +51,13 @@ public class Movement : MonoBehaviour {
         float mouseX =  Input.GetAxis("Mouse X") * mouseSensitivity;
         float mouseY = -Input.GetAxis("Mouse Y") * mouseSensitivity;
 
-        pitch = Mathf.Clamp(pitch + mouseY, -maxPitch, maxPitch);
+        yaw += mouseX;
+        pitch += mouseY;
+        pitch = Mathf.Clamp(pitch, -maxPitch, maxPitch);
 
-        transform.Rotate(Vector3.up * mouseX);
-        cam.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        //horizontal/yaw rotation (around y-axis) on the player body
+        transform.rotation = Quaternion.Euler(0, yaw, 0);   //transform.Rotate(Vector3.up * mouseX);
+        cam.localRotation = Quaternion.Euler(pitch, 0, 0);   //localRotation to pitch-rotate relative to the player's yaw
     }
 
     void Move() {
@@ -62,8 +66,9 @@ public class Movement : MonoBehaviour {
 
         Vector3 move = (transform.right * h + transform.forward * v).normalized * moveSpeed;
 
+        //floaty jump
         if (cc.isGrounded) {
-            verticalVelocity = Input.GetKeyDown(KeyCode.Space) ? jumpForce : -2f;
+            verticalVelocity = Input.GetKey(KeyCode.Space) ? jumpForce : -2f;
         } else {
             verticalVelocity -= gravity * Time.deltaTime;
         }
