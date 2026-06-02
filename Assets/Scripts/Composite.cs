@@ -13,6 +13,7 @@ public class Composite : MonoBehaviour
     
     [SerializeField, Range(0.1f, 1f)] private float captureSize = 0.4f;
     
+    private CanvasManager canvasManager;
     private Snapshot[] slots;
     private RenderTexture cameraRT;
     private RenderTexture compositeRT;
@@ -20,7 +21,10 @@ public class Composite : MonoBehaviour
     private int currentSlot = 0;
     private bool isCapturing = false;
 
-    void Awake() {
+    void Awake()
+    {
+        canvasManager = GetComponentInParent<CanvasManager>();
+            
         cameraRT = new RenderTexture(Screen.width, Screen.height, 1);
         
         compositeRT = new RenderTexture(canvasSize, canvasSize, 0, 
@@ -37,6 +41,38 @@ public class Composite : MonoBehaviour
         }
     }
 
+    private void OnEnable()
+    {
+        canvasManager.onSnapshot += takeShot;
+    }
+
+    private void takeShot()
+    {
+        RenderTexture rt = new RenderTexture(512, 512, 24);
+
+        // store original state
+        float originalAspect = Camera.main.aspect;
+        float originalFOV    = Camera.main.fieldOfView;
+
+        // force square aspect to constrain the frustum
+        Camera.main.aspect = 1f;
+
+        // optionally narrow FOV to match captureSize crop feeling
+        // smaller captureSize = more zoomed in
+        Camera.main.fieldOfView = originalFOV * captureSize;
+
+        Camera.main.targetTexture = rt;
+        Camera.main.Render();
+        Camera.main.targetTexture = null;
+
+        // restore
+        Camera.main.aspect         = originalAspect;
+        Camera.main.fieldOfView    = originalFOV;
+        
+        slots[currentSlot].StoreCapture(rt);
+        ++currentSlot;
+    }
+
 
     private void LateUpdate()
     {
@@ -49,32 +85,6 @@ public class Composite : MonoBehaviour
             captureSize = Mathf.Clamp(captureSize - scroll * 0.1f, 0.1f, 1f);
         }
         
-        if (Input.GetKeyDown(KeyCode.E))
-        {
-            RenderTexture rt = new RenderTexture(512, 512, 24);
-
-            // store original state
-            float originalAspect = Camera.main.aspect;
-            float originalFOV    = Camera.main.fieldOfView;
-
-            // force square aspect to constrain the frustum
-            Camera.main.aspect = 1f;
-
-            // optionally narrow FOV to match captureSize crop feeling
-            // smaller captureSize = more zoomed in
-            Camera.main.fieldOfView = originalFOV * captureSize;
-
-            Camera.main.targetTexture = rt;
-            Camera.main.Render();
-            Camera.main.targetTexture = null;
-
-            // restore
-            Camera.main.aspect         = originalAspect;
-            Camera.main.fieldOfView    = originalFOV;
-        
-            slots[currentSlot].StoreCapture(rt);
-            ++currentSlot;
-        }
     }
 
     public RenderTexture BuildComposite() {
