@@ -117,4 +117,11 @@ public class Movement : MonoBehaviour {
 
         currentSway = Vector3.Lerp(currentSway, targetSway, Time.deltaTime * swaySmoothing);
     }
+
+    public void Warp(Vector3 pos)
+    {
+        cc.enabled = false;
+        transform.position = pos;
+        cc.enabled = true;
+    }
 }

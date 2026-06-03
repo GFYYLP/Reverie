@@ -10,7 +10,7 @@ public class RoomManager : MonoBehaviour
     //[SerializeField] private RoomSpace nextRoom;
     [SerializeField] private Door doorEnter;
     [SerializeField] private Door doorExit;
-    [SerializeField] private Transform player;
+    [SerializeField] private Movement player;
     
     [SerializeField] private bool dynamicRegen = false;
     private MeshRenderer currentMesh;
@@ -64,7 +64,9 @@ public class RoomManager : MonoBehaviour
         Vector3 prevPos = player.transform.position;
         
         //teleport player for illusion of advancing into the next one
-        player.transform.position = Vector3.zero;//doorEnter.transform.position;
+        //player.transform.position = Vector3.zero;//doorEnter.transform.position;
+        
+        player.Warp(doorEnter.transform.position);
 
         Debug.Log("Player teleported from ");
         Debug.Log(prevPos);
