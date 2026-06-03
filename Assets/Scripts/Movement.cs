@@ -26,6 +26,7 @@ public class Movement : MonoBehaviour {
     
     private CharacterController cc;
     private Transform cam;
+    private float currSpeed;
     private float pitch;
     private float yaw;
     private float verticalVelocity;
@@ -41,6 +42,9 @@ public class Movement : MonoBehaviour {
     }
 
     void Update() {
+        currSpeed = moveSpeed;
+        if (Input.GetKey(KeyCode.Q)) currSpeed *= 5.5f;
+        
         Look();
         Move();
         Bob();
@@ -63,8 +67,9 @@ public class Movement : MonoBehaviour {
     void Move() {
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
+        
 
-        Vector3 move = (transform.right * h + transform.forward * v).normalized * moveSpeed;
+        Vector3 move = (transform.right * h + transform.forward * v).normalized * currSpeed;
 
         //floaty jump
         if (cc.isGrounded) {
@@ -80,7 +85,7 @@ public class Movement : MonoBehaviour {
     void Bob() {
         float speed = new Vector3(
             Input.GetAxis("Horizontal"), 0f, Input.GetAxis("Vertical")
-        ).magnitude * moveSpeed;
+        ).magnitude * currSpeed;
 
         bool isMoving = speed > 0.1f && cc.isGrounded;
 

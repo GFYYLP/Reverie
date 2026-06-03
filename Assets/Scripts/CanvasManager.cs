@@ -105,6 +105,11 @@ public class CanvasManager : MonoBehaviour
             leftVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.white, vignetteColor, t);
             rightVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.white, vignetteColor, t);
             
+            // topVignetteColor = Color.Lerp(Color.white, topVignetteColor, t);
+            // bottomVignetteColor = Color.Lerp(Color.white, bottomVignetteColor, t);
+            // leftVignetteColor = Color.Lerp(Color.white, leftVignetteColor, t);
+            // rightVignetteColor = Color.Lerp(Color.white, rightVignetteColor, t);
+            
             yield return null;
         } 
     }
