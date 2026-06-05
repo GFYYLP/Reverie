@@ -65,17 +65,7 @@ public class RoomManager : MonoBehaviour
         
         //teleport player for illusion of advancing into the next one
         //player.transform.position = Vector3.zero;//doorEnter.transform.position;
-        
         player.Warp(doorEnter.transform.position);
-
-        Debug.Log("Player teleported from ");
-        Debug.Log(prevPos);
-        Debug.Log(" to ");
-        Debug.Log(player.transform.position); 
-
-        // //yaw-rotating the room for the illusion of advancing into the next one
-        // //anchored at the horizontal position of the door (within which the player cant see the room)
-        // currentRoom.transform.RotateAround(door.transform.position, Vector3.up, 180);
     }
     
 

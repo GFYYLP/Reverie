@@ -60,12 +60,12 @@ public class CanvasManager : MonoBehaviour
         targetHeight = (Screen.height - captureRegionSize) * 0.5f;
         targetWidth  = (Screen.width  - captureRegionSize) * 0.5f;
         
-        if (Input.GetMouseButtonDown(0)) {
+        if (Input.GetMouseButtonDown(1)) {
             StartCoroutine(AnimateIn());
             inCamera = true;
         }
         
-        if (Input.GetMouseButtonUp(0))
+        if (Input.GetMouseButtonUp(1))
         {
             StartCoroutine(AnimateOut());
             inCamera = false;
@@ -73,7 +73,7 @@ public class CanvasManager : MonoBehaviour
 
         if (inCamera)
         {
-            if (Input.GetKeyDown(KeyCode.E))
+            if (Input.GetMouseButtonDown(0))
             {
                 onSnapshot?.Invoke();
             }

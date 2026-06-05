@@ -45,6 +45,12 @@ public class Movement : MonoBehaviour {
         currSpeed = moveSpeed;
         if (Input.GetKey(KeyCode.Q)) currSpeed *= 5.5f;
         
+        // Press Escape to unlock cursor
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            Cursor.lockState = Cursor.lockState == CursorLockMode.Locked ? CursorLockMode.None : CursorLockMode.Locked;
+        }
+        
         Look();
         Move();
         Bob();

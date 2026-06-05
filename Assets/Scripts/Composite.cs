@@ -79,9 +79,6 @@ public class Composite : MonoBehaviour
         float scroll = Input.GetAxis("Mouse ScrollWheel");
         if (scroll != 0)
         {
-            // Camera.main.fieldOfView -= scroll * 10f; // Adjust zoom speed as needed
-            // Camera.main.fieldOfView = Mathf.Clamp(Camera.main.fieldOfView, 20f, 100f); // Limit zoom range
-            
             captureSize = Mathf.Clamp(captureSize - scroll * 0.1f, 0.1f, 1f);
         }
         
