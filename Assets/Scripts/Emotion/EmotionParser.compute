@@ -1,0 +1,74 @@
+#pragma kernel Analyze
+
+Texture2D<float4> inputTex;
+RWStructuredBuffer<float> results; // 6 floats: symmetry, colorVariance, brightness, edgeDensity, isolation, warmth
+
+groupshared float4 pixels[64]; // flattened, each thread stores its pixel
+groupshared float  edges[64];
+
+[numthreads(8, 8, 1)]
+void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
+    float4 col = inputTex[id.xy];
+    pixels[gIdx] = col;
+
+    // edge detection per pixel — compare to right and up neighbor
+    float4 right = inputTex[min(id.xy + uint2(1,0), uint2(63,63))];
+    float4 up    = inputTex[min(id.xy + uint2(0,1), uint2(63,63))];
+    edges[gIdx]  = length(col.rgb - right.rgb) + length(col.rgb - up.rgb);
+
+    GroupMemoryBarrierWithGroupSync();
+
+    // only one thread does the reduction
+    if (gIdx != 0) return;
+
+    float symDiff       = 0;
+    float colorVar      = 0;
+    float brightnessSum = 0;
+    float edgeSum       = 0;
+    float warmthSum     = 0;
+    float3 mean         = 0;
+
+    // first pass — mean color and basic sums
+    for (int i = 0; i < 64; i++) {
+        mean         += pixels[i].rgb;
+        brightnessSum += dot(pixels[i].rgb, float3(0.299, 0.587, 0.114));
+        edgeSum      += edges[i];
+        warmthSum    += (pixels[i].r + pixels[i].g) - pixels[i].b;
+    }
+    mean         /= 64.0;
+    brightnessSum /= 64.0;
+    edgeSum      /= 64.0;
+    warmthSum    = saturate((warmthSum / 64.0 + 1.0) * 0.5); // normalize to 0-1
+
+    // second pass — variance and symmetry
+    // symmetry: compare pixel i to its horizontal mirror
+    // in flattened 8x8: mirror of (x,y) is (7-x, y) = gIdx with x flipped
+    for (int j = 0; j < 64; j++) {
+        float3 diff  = pixels[j].rgb - mean;
+        colorVar    += dot(diff, diff);
+
+        // horizontal mirror index in 8x8 grid
+        int x       = j % 8;
+        int y       = j / 8;
+        int mirrorJ = (7 - x) + y * 8;
+        symDiff     += length(pixels[j].rgb - pixels[mirrorJ].rgb);
+    }
+    colorVar /= 64.0;
+    symDiff  /= 64.0;
+
+    // isolation: ratio of near-black pixels
+    // high isolation = few bright pixels = liminal/empty
+    float brightCount = 0;
+    for (int k = 0; k < 64; k++) {
+        brightCount += step(0.2, dot(pixels[k].rgb, float3(0.299,0.587,0.114)));
+    }
+    float isolation = 1.0 - saturate(brightCount / 32.0); // 0=crowded, 1=empty
+
+    // write results
+    results[0] = saturate(1.0 - symDiff * 2.0);    // symmetry:     high = symmetric
+    results[1] = saturate(colorVar * 4.0);          // colorVariance: high = varied
+    results[2] = saturate(brightnessSum);            // brightness
+    results[3] = saturate(edgeSum * 2.0);            // edgeDensity:  high = complex geometry
+    results[4] = isolation;                          // isolation:    high = empty/liminal
+    results[5] = warmthSum;                          // warmth:       high = warm colors
+}

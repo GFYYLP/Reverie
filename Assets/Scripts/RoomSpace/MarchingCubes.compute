@@ -1,5 +1,5 @@
 #pragma kernel March
-#include "Includes/MarchTable.compute"
+#include "../Includes/MarchTable.compute"
 
 static const int numThreads = 8;
 
