@@ -25,7 +25,8 @@ public class CanvasManager : MonoBehaviour
     private float targetHeight = 0;
     private float targetWidth = 0;
     
-    public event Action onSnapshot ;
+    public event Action onSnapshot;
+    public event Action onProject;
 
     void Awake()
     {
@@ -51,6 +52,7 @@ public class CanvasManager : MonoBehaviour
     private void OnEnable()
     {
         onSnapshot += FlashVignette;
+        onProject += PrintVignette;
     }
 
     // Update is called once per frame
@@ -76,6 +78,11 @@ public class CanvasManager : MonoBehaviour
             if (Input.GetMouseButtonDown(0))
             {
                 onSnapshot?.Invoke();
+            }
+            
+            if (Input.GetMouseButtonDown(2))
+            {
+                onProject?.Invoke();
             }
 
             if (vignetteAnimationFinished)
@@ -104,6 +111,31 @@ public class CanvasManager : MonoBehaviour
             bottomVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.white, vignetteColor, t);
             leftVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.white, vignetteColor, t);
             rightVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.white, vignetteColor, t);
+            
+            // topVignetteColor = Color.Lerp(Color.white, topVignetteColor, t);
+            // bottomVignetteColor = Color.Lerp(Color.white, bottomVignetteColor, t);
+            // leftVignetteColor = Color.Lerp(Color.white, leftVignetteColor, t);
+            // rightVignetteColor = Color.Lerp(Color.white, rightVignetteColor, t);
+            
+            yield return null;
+        } 
+    }
+    
+    void PrintVignette()
+    {
+        StartCoroutine(DoPrintVignette());
+    }
+    IEnumerator DoPrintVignette()
+    {
+        float t = 0f;
+        while (t < 1f) {
+            t += Time.deltaTime / vignetteDuration;
+            
+            //brief white flash on vignettes
+            topVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.cyan, vignetteColor, t);
+            bottomVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.cyan, vignetteColor, t);
+            leftVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.cyan, vignetteColor, t);
+            rightVignette.GetComponent<UnityEngine.UI.Image>().color = Color.Lerp(Color.cyan, vignetteColor, t);
             
             // topVignetteColor = Color.Lerp(Color.white, topVignetteColor, t);
             // bottomVignetteColor = Color.Lerp(Color.white, bottomVignetteColor, t);

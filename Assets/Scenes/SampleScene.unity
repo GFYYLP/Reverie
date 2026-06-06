@@ -562,6 +562,7 @@ GameObject:
   - component: {fileID: 571701458}
   - component: {fileID: 571701460}
   - component: {fileID: 571701459}
+  - component: {fileID: 571701461}
   m_Layer: 5
   m_Name: Composite
   m_TagString: Untagged
@@ -629,6 +630,21 @@ MonoBehaviour:
   m_Spacing: {x: 2, y: 2}
   m_Constraint: 0
   m_ConstraintCount: 2
+--- !u!114 &571701461
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 571701457}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 534383119e84a6d47bbae48b6f2a8bb3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  decalBaseMaterial: {fileID: 2100000, guid: 0a9016cc1dbbb5f45b6134f61fd3e3b0, type: 2}
+  projectionDepth: 5
+  maxDecals: 16
 --- !u!1 &620280244
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,6 +15,7 @@ public class Composite : MonoBehaviour
     
     private CanvasManager canvasManager;
     private Snapshot[] slots;
+    private ShotProjector shotProjector;
     private RenderTexture cameraRT;
     private RenderTexture compositeRT;
     
@@ -24,6 +25,7 @@ public class Composite : MonoBehaviour
     void Awake()
     {
         canvasManager = GetComponentInParent<CanvasManager>();
+        shotProjector =  GetComponent<ShotProjector>();
             
         cameraRT = new RenderTexture(Screen.width, Screen.height, 1);
         
@@ -44,9 +46,26 @@ public class Composite : MonoBehaviour
     private void OnEnable()
     {
         canvasManager.onSnapshot += takeShot;
+        canvasManager.onProject += doProjection;
     }
 
     private void takeShot()
+    {
+        RenderTexture rt = CaptureView();
+        
+        slots[currentSlot].StoreCapture(rt);
+        ++currentSlot;
+    }
+
+    private void doProjection()
+    {
+        RenderTexture rt = CaptureView();
+        
+        int shotSlot = Math.Max(currentSlot-1, 0); 
+        shotProjector?.ProjectDecal(slots[shotSlot].capturedTexture);
+    }
+
+    private RenderTexture CaptureView()
     {
         RenderTexture rt = new RenderTexture(512, 512, 24);
 
@@ -68,9 +87,8 @@ public class Composite : MonoBehaviour
         // restore
         Camera.main.aspect         = originalAspect;
         Camera.main.fieldOfView    = originalFOV;
-        
-        slots[currentSlot].StoreCapture(rt);
-        ++currentSlot;
+
+        return rt;
     }
 
 
