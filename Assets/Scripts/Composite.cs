@@ -45,11 +45,11 @@ public class Composite : MonoBehaviour
 
     private void OnEnable()
     {
-        canvasManager.onSnapshot += takeShot;
-        canvasManager.onProject += doProjection;
+        canvasManager.onSnapshot += TakeShot;
+        canvasManager.onProject += DoProjection;
     }
 
-    private void takeShot()
+    private void TakeShot()
     {
         RenderTexture rt = CaptureView();
         
@@ -57,10 +57,8 @@ public class Composite : MonoBehaviour
         ++currentSlot;
     }
 
-    private void doProjection()
+    private void DoProjection()
     {
-        RenderTexture rt = CaptureView();
-        
         int shotSlot = Math.Max(currentSlot-1, 0); 
         shotProjector?.ProjectDecal(slots[shotSlot].capturedTexture);
     }

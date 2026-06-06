@@ -33,7 +33,7 @@ public class ShotProjector : MonoBehaviour
 
         // Size (of projected frustum(?)): match the cropped square in world space
         float fovRad     = cam.fieldOfView * composite.CaptureSize * Mathf.Deg2Rad;
-        float halfHeight = Mathf.Tan(fovRad * 0.5f) * projectionDepth;
+        float halfHeight = Mathf.Tan(fovRad * 0.5f);
         float sideLength = halfHeight * 2f; // square, so width == height
 
         //place projector at camera, pointing forward 
@@ -41,8 +41,7 @@ public class ShotProjector : MonoBehaviour
         poolIndex++;
 
         dp.transform.position = cam.transform.position;
-        dp.transform.rotation = cam.transform.rotation 
-                                * Quaternion.Euler(90f, 0f, 0f);  // DecalProjector projects along its local -Y, so we rotate camera's +Z → -Y
+        dp.transform.rotation = cam.transform.rotation;  // DecalProjector projects along its local -Y, so we rotate camera's +Z → -Y
 
         dp.size = new Vector3(sideLength, sideLength, projectionDepth);
         dp.pivot = new Vector3(0f, 0f, projectionDepth * 0.5f); //offset this from object's centre to camera's eye
