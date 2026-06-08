@@ -12,7 +12,9 @@ public class Composite : MonoBehaviour
     [SerializeField] private int canvasSize = 256;
     
     [SerializeField, Range(0.1f, 1f)] private float captureSize = 0.4f;
+    [SerializeField] private float shiftTick = 4f;
     
+    private EmotionManager emotionManager;
     private CanvasManager canvasManager;
     private Snapshot[] slots;
     private ShotProjector shotProjector;
@@ -21,11 +23,14 @@ public class Composite : MonoBehaviour
     
     private int currentSlot = 0;
     private bool isCapturing = false;
+    private float timer=0f;
 
     void Awake()
     {
         canvasManager = GetComponentInParent<CanvasManager>();
         shotProjector =  GetComponent<ShotProjector>();
+        
+        emotionManager =  FindFirstObjectByType<EmotionManager>();
             
         cameraRT = new RenderTexture(Screen.width, Screen.height, 1);
         
@@ -86,9 +91,22 @@ public class Composite : MonoBehaviour
         Camera.main.aspect         = originalAspect;
         Camera.main.fieldOfView    = originalFOV;
 
+        //parse grammar
+        emotionManager.ParseGrammar(rt);
+        
         return rt;
     }
 
+    public void parseScreenGrammar()
+    {
+        RenderTexture rt = new RenderTexture(512, 512, 24);
+        
+        Camera.main.targetTexture = rt;
+        Camera.main.Render();
+        Camera.main.targetTexture = null;
+        
+        emotionManager.ParseGrammar(rt);
+    }
 
     private void LateUpdate()
     {
@@ -98,6 +116,13 @@ public class Composite : MonoBehaviour
             captureSize = Mathf.Clamp(captureSize - scroll * 0.1f, 0.1f, 1f);
         }
         
+        //parse screen grammar (once every 4 seconds)
+        timer  += Time.deltaTime;
+        if (timer > shiftTick)
+        {
+            timer -= shiftTick;
+            parseScreenGrammar();
+        }
     }
 
     public RenderTexture BuildComposite() {

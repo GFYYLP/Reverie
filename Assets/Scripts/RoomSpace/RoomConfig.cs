@@ -12,6 +12,9 @@ public class RoomConfig {
     public float fragmentationScore;
     public float radialScore;
 
+    [SerializeField] private EmotionManager emotionManager;
+    private Vector4 currEmotion;
+
     // default for first room: blank slate, monotone world
     // public static RoomConfig Default() => new RoomConfig {
     //     spikeScore        = 0f,

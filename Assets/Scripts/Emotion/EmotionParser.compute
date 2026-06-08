@@ -11,7 +11,7 @@ void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
     float4 col = inputTex[id.xy];
     pixels[gIdx] = col;
 
-    // edge detection per pixel — compare to right and up neighbor
+    // edge detection per pixel: compare to right and up neighbor
     float4 right = inputTex[min(id.xy + uint2(1,0), uint2(63,63))];
     float4 up    = inputTex[min(id.xy + uint2(0,1), uint2(63,63))];
     edges[gIdx]  = length(col.rgb - right.rgb) + length(col.rgb - up.rgb);
@@ -25,22 +25,22 @@ void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
     float colorVar      = 0;
     float brightnessSum = 0;
     float edgeSum       = 0;
-    float warmthSum     = 0;
+    //float warmthSum     = 0;
     float3 mean         = 0;
 
-    // first pass — mean color and basic sums
+    // first pass: mean color and basic sums
     for (int i = 0; i < 64; i++) {
         mean         += pixels[i].rgb;
         brightnessSum += dot(pixels[i].rgb, float3(0.299, 0.587, 0.114));
         edgeSum      += edges[i];
-        warmthSum    += (pixels[i].r + pixels[i].g) - pixels[i].b;
+       // warmthSum    += (pixels[i].r + pixels[i].g) - pixels[i].b;
     }
     mean         /= 64.0;
     brightnessSum /= 64.0;
     edgeSum      /= 64.0;
-    warmthSum    = saturate((warmthSum / 64.0 + 1.0) * 0.5); // normalize to 0-1
+    //warmthSum    = saturate((warmthSum / 64.0 + 1.0) * 0.5); // normalize to 0-1
 
-    // second pass — variance and symmetry
+    // second pass: variance and symmetry
     // symmetry: compare pixel i to its horizontal mirror
     // in flattened 8x8: mirror of (x,y) is (7-x, y) = gIdx with x flipped
     for (int j = 0; j < 64; j++) {
@@ -70,5 +70,5 @@ void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
     results[2] = saturate(brightnessSum);            // brightness
     results[3] = saturate(edgeSum * 2.0);            // edgeDensity:  high = complex geometry
     results[4] = isolation;                          // isolation:    high = empty/liminal
-    results[5] = warmthSum;                          // warmth:       high = warm colors
+    //results[5] = warmthSum;                          // warmth:       high = warm colors
 }

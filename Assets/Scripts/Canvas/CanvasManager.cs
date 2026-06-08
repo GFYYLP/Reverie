@@ -16,6 +16,8 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private Color leftVignetteColor;
     [SerializeField] private Color rightVignetteColor;
     
+    //[SerializeField] private RoomManager roomManager;
+    
     private float vignetteDuration = 0.2f;
     private bool vignetteAnimationFinished=false;
     
