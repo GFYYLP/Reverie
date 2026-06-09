@@ -12,12 +12,13 @@ public class EmotionManager : MonoBehaviour
     [StructLayout(LayoutKind.Sequential)]
     private struct Grammar
     {
-        private float symmetry;
-        private float colorVariance;
-        private float brightness;
-        private float edgeDensity;
-        private float isolation;
-        private float warmth;
+        public float symmetry;
+        public float colorVariance;
+        public float brightness;
+        public float edgeDensity;
+        public float isolation;
+
+        private Vector3 padding;
     }
     private Grammar currGrammar;
     private GraphicsBuffer grammarBuffer;
@@ -35,12 +36,11 @@ public class EmotionManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
     }
 
     public void ParseGrammar(RenderTexture sourceRT)
     {
-        int kernel = grammarShader.FindKernel("CSMain");
+        int kernel = grammarShader.FindKernel("Analyze");
         RenderTexture small = RenderTexture.GetTemporary(64, 64, 0, RenderTextureFormat.ARGB32);
         Graphics.Blit(sourceRT, small);
 
@@ -55,23 +55,18 @@ public class EmotionManager : MonoBehaviour
 
     private void Readback()
     {
-        float[] scores = new float[6];
+        Grammar[] scores = new Grammar[1];
         grammarBuffer.GetData(scores);
 
-        float symmetry      = scores[0];
-        float colorVariance = scores[1];
-        float brightness    = scores[2];
-        float edgeDensity   = scores[3];
-        float isolation     = scores[4];
-        //float warmth        = scores[5];
+        //float warmth        = scores.warmth;
 
-        // map to emotion weights
-        // float content  = symmetry * colorVariance * warmth;           // needs all three
-        // float unease   = isolation * (1f - colorVariance) * (1f - warmth);
-        // float awe      = edgeDensity * (1f - isolation);              // complex but not empty
-        // float intensity = Mathf.Max(content, unease, awe);
-        //
-        // Emotion.Instance.UpdateState(content, unease, awe, intensity);
+        //map to emotion weights
+        float content = scores[0].symmetry * scores[0].colorVariance;// * warmth;           // needs all three
+        float unease = scores[0].isolation * (1f - scores[0].colorVariance);// * (1f - warmth);
+        float awe = scores[0].edgeDensity;// * (1f - scores[0].isolation);              // complex but not empty
+        float intensity = Mathf.Max(content, unease, awe);
+        
+        Emotion.Instance.UpdateState(content*0.1f, unease*0.1f, awe*0.1f, intensity*0.1f);
     }
     
     // IEnumerator GrammarLoop() {
@@ -86,4 +81,10 @@ public class EmotionManager : MonoBehaviour
     //         UpdateVolumeParameters(scores);
     //     }
     // }
+    
+    void OnDestroy()
+    {
+        grammarBuffer.Release();
+        grammarBuffer.Dispose();
+    }
 }

@@ -18,38 +18,15 @@ public class VolumeManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        // timer  += Time.deltaTime;
-        //
-        // //update volume once every 4 seconds
-        // if (timer > shiftTick)
-        // {
-        //     timer -= shiftTick;
-        //     
-        //     //update emotion
-        //     
-        //     UpdateVolumeParameters(
-        //         Emotion.Instance.content,
-        //         Emotion.Instance.unease,
-        //         Emotion.Instance.awe
-        //     );
-        // }
-        
+        UpdateVolumeParameters(
+            Emotion.Instance.content,
+            Emotion.Instance.unease,
+            Emotion.Instance.awe
+        );
     }
     
     void UpdateVolumeParameters(float content, float unease,  float awe) 
     {
-        
-        // float symmetry      = scores[0];
-        // float colorVariance = scores[1];
-        // float brightness    = scores[2];
-        // float edgeDensity   = scores[3];
-        // float isolation     = scores[4];
-        // float warmth        = scores[5];
-    
-        // float content  = symmetry * colorVariance * warmth;
-        // float unease   = isolation * (1f - colorVariance) * (1f - warmth);
-        // float awe      = edgeDensity * (1f - isolation);
-    
         if (volume.profile.TryGet<Bloom>(out var bloom)) {
             bloom.threshold.value = Mathf.Lerp(1.2f, 0.3f, 
                 Mathf.Max(content, awe));

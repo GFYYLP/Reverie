@@ -13,8 +13,6 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private Movement player;
     
     [SerializeField] private bool dynamicRegen = false;
-    
-    [SerializeField] private CanvasManager canvasManager;
     private MeshRenderer currentMesh;
 
 

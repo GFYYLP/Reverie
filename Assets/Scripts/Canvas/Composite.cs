@@ -118,10 +118,11 @@ public class Composite : MonoBehaviour
         
         //parse screen grammar (once every 4 seconds)
         timer  += Time.deltaTime;
-        if (timer > shiftTick)
+        if (Input.GetKeyDown(KeyCode.Space))//timer > shiftTick)
         {
             timer -= shiftTick;
             parseScreenGrammar();
+            //UpdateRoomConfig()
         }
     }
 
