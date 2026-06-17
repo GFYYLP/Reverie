@@ -99,13 +99,15 @@ public class Composite : MonoBehaviour
 
     public void parseScreenGrammar()
     {
-        RenderTexture rt = new RenderTexture(512, 512, 24);
+        RenderTexture rt = RenderTexture.GetTemporary(Screen.width, Screen.height, 24);
         
         Camera.main.targetTexture = rt;
         Camera.main.Render();
         Camera.main.targetTexture = null;
         
         emotionManager.ParseGrammar(rt);
+        
+        RenderTexture.ReleaseTemporary(rt);
     }
 
     private void LateUpdate()
@@ -122,7 +124,6 @@ public class Composite : MonoBehaviour
         {
             timer -= shiftTick;
             parseScreenGrammar();
-            //UpdateRoomConfig()
         }
     }
 

@@ -40,6 +40,7 @@ public class RoomManager : MonoBehaviour
 
     public void AdvanceRoom()
     {
+        roomConfig.UpdateScores();
         currentRoom.Generate(roomConfig);
         currentMesh = currentRoom.GetComponent<MeshRenderer>();
         

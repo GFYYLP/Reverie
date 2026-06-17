@@ -284,6 +284,7 @@ GameObject:
   m_Component:
   - component: {fileID: 249626270}
   - component: {fileID: 249626269}
+  - component: {fileID: 249626271}
   m_Layer: 0
   m_Name: Emotions Register
   m_TagString: Untagged
@@ -303,6 +304,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3dedb9ab1b13a7340946ebe7a745f47d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  grammarShader: {fileID: 7200000, guid: d622aeda75d22de4a87b3c7171526e61, type: 3}
+  grammarInterval: 0.5
 --- !u!4 &249626270
 Transform:
   m_ObjectHideFlags: 0
@@ -318,6 +321,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &249626271
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 249626268}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c0e0110f027d4e8cad5aeac738cfa479, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  content: 0
+  unease: 0
+  awe: 0
+  intensity: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -650,6 +669,7 @@ MonoBehaviour:
   slotCount: 25
   canvasSize: 2
   captureSize: 0.4
+  shiftTick: 4
 --- !u!114 &571701460
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -857,13 +877,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roomConfig:
-    spikeScore: 5.92
-    symmetryScore: 5.46
-    verticalityScore: 5.4
+    spikeScore: 0
+    symmetryScore: 0
+    verticalityScore: 0
+    densityScore: 0
+    fragmentationScore: 0
+    radialScore: 0
     roomScale: 3
-    densityScore: 4.14
-    fragmentationScore: 5.6
-    radialScore: 0.65
   currentRoom: {fileID: 1383670675}
   doorEnter: {fileID: 1857675435}
   doorExit: {fileID: 1476232039}
