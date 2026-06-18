@@ -75,10 +75,10 @@ void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
     float isolation = 1.0 - saturate(brightCount / 32.0); // 0=crowded, 1=empty
 
     // write results
-    results[0].symmetry = saturate(1.0 - symDiff * 2.0);    // symmetry:     high = symmetric
-    results[0].colorVariance = saturate(colorVar * 4.0);          // colorVariance: high = varied
-    results[0].brightness = saturate(brightnessSum);            // brightness
-    results[0].edgeDensity = saturate(edgeSum * 2.0);            // edgeDensity:  high = complex geometry
+    results[0].symmetry = saturate(1.0 - symDiff * 6.0);    // symmetry:     high = symmetric
+    results[0].colorVariance = saturate(colorVar * 12.0);          // colorVariance: high = varied
+    results[0].brightness = saturate(brightnessSum * 3.0);            // brightness
+    results[0].edgeDensity = saturate(edgeSum * 6.0);            // edgeDensity:  high = complex geometry
     results[0].isolation = isolation;                          // isolation:    high = empty/liminal
     //results[0].warmth = warmthSum;                          // warmth:       high = warm colors
 }

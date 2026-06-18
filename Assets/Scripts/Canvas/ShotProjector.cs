@@ -8,7 +8,7 @@ public class ShotProjector : MonoBehaviour
     [SerializeField] private Material decalBaseMaterial; // URP/Decal material as template
     [SerializeField] private float projectionDepth = 5f; // how deep the projector volume extends
     [SerializeField] private int maxDecals = 16;         // pool size
-
+    
     private DecalProjector[] pool;
     private int poolIndex = 0;
     private Composite composite;
@@ -22,12 +22,15 @@ public class ShotProjector : MonoBehaviour
         {
             GameObject go = new GameObject($"ShotDecal_{i}");
             DecalProjector dp = go.AddComponent<DecalProjector>();
+            
+            //dp.material = new Material(decalBaseMaterial);
+            
             dp.enabled = false;
             pool[i] = dp;
         }
     }
     
-    public void ProjectDecal(RenderTexture shotRT)
+    public void ProjectDecal(Snapshot snap)
     {
         Camera cam = Camera.main;
 
@@ -47,9 +50,11 @@ public class ShotProjector : MonoBehaviour
         dp.pivot = new Vector3(0f, 0f, projectionDepth * 0.5f); //offset this from object's centre to camera's eye
 
         // stamp the RT onto a decal material instance
-        Material mat = new Material(decalBaseMaterial);
-        mat.SetTexture("_BaseMap", shotRT);
-        dp.material = mat;
+        
+        // mat.SetTexture("_BaseMap", shotRT);
+        
+        
+        dp.material = snap.material;
 
         dp.enabled = true;
         

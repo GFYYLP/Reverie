@@ -15,10 +15,10 @@ public class Emotion : MonoBehaviour
 
     public void UpdateState(float contentValue, float uneaseValue, float aweValue, float intensityValue)
     {
-        content = contentValue;
-        unease = uneaseValue;
-        awe = aweValue;
-        intensity = intensityValue; 
+        content += contentValue;
+        unease += uneaseValue;
+        awe += aweValue;
+        intensity += intensityValue; 
     }
     
     private void Awake()

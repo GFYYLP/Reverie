@@ -27,7 +27,10 @@ public class CanvasManager : MonoBehaviour
     private float targetHeight = 0;
     private float targetWidth = 0;
     
-    public event Action onSnapshot;
+    private bool holdTriggered;
+    private float leftPressTime;
+    
+    public event Action<bool> onSnapshot;
     public event Action onProject;
 
     void Awake()
@@ -79,8 +82,25 @@ public class CanvasManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                onSnapshot?.Invoke();
+                holdTriggered =  true;
+                leftPressTime =  Time.time;
             }
+
+            if (Input.GetMouseButton(0) && !holdTriggered
+                                        && Time.time - leftPressTime > 0.3f)
+            {
+                holdTriggered = false;
+                onSnapshot?.Invoke(true);
+            }
+
+            if (Input.GetMouseButtonUp(0))
+            {
+                // if (!holdTriggered)
+                // {
+                    onSnapshot?.Invoke(false);
+                // }
+            }
+            
             
             if (Input.GetMouseButtonDown(2))
             {
@@ -98,7 +118,7 @@ public class CanvasManager : MonoBehaviour
         }
     }
 
-    void FlashVignette()
+    void FlashVignette(bool isRecording = false)
     {
         StartCoroutine(DoFlashVignette());
     }

@@ -54,18 +54,30 @@ public class Composite : MonoBehaviour
         canvasManager.onProject += DoProjection;
     }
 
-    private void TakeShot()
+    private float currTimer = 0f;
+    private void TakeShot(bool isRecording = false)
     {
         RenderTexture rt = CaptureView();
         
-        slots[currentSlot].StoreCapture(rt);
-        ++currentSlot;
+        currTimer += Time.deltaTime;
+        const float frameRate = 0.33f;
+        if (currTimer >= frameRate)
+        {
+            slots[currentSlot].StoreCapture(rt);
+            currTimer -= 0.33f;
+        }
+
+        //move on to the next slot once we are done with adding frames to the current one
+        if (!isRecording)  
+        {
+            ++currentSlot;
+        }
     }
 
     private void DoProjection()
     {
         int shotSlot = Math.Max(currentSlot-1, 0); 
-        shotProjector?.ProjectDecal(slots[shotSlot].capturedTexture);
+        shotProjector?.ProjectDecal(slots[shotSlot]);
     }
 
     private RenderTexture CaptureView()
@@ -127,37 +139,37 @@ public class Composite : MonoBehaviour
         }
     }
 
-    public RenderTexture BuildComposite() {
-        // clear to black
-        Graphics.SetRenderTarget(compositeRT);
-        GL.Clear(true, true, Color.black);
-    
-        int gridW   = Mathf.CeilToInt(Mathf.Sqrt(slots.Length));
-        float cellW = 1f / gridW;
-    
-        for (int i = 0; i < slots.Length; i++) {
-            if (slots[i].capturedTexture == null) continue;
-        
-            // compute normalized position of this slot in the canvas
-            float x = (i % gridW) * cellW;
-            float y = (i / gridW) * cellW;
-        
-            Rect dest = new Rect(x, y, cellW, cellW);
-            Graphics.Blit(slots[i].capturedTexture, compositeRT, 
-                new Vector2(cellW, cellW), 
-                new Vector2(x, y));
-        }
-    
-        return compositeRT;
-    }
+    // public RenderTexture BuildComposite() {
+    //     // clear to black
+    //     Graphics.SetRenderTarget(compositeRT);
+    //     GL.Clear(true, true, Color.black);
+    //
+    //     int gridW   = Mathf.CeilToInt(Mathf.Sqrt(slots.Length));
+    //     float cellW = 1f / gridW;
+    //
+    //     for (int i = 0; i < slots.Length; i++) {
+    //         if (slots[i].capturedTexture == null) continue;
+    //     
+    //         // compute normalized position of this slot in the canvas
+    //         float x = (i % gridW) * cellW;
+    //         float y = (i / gridW) * cellW;
+    //     
+    //         Rect dest = new Rect(x, y, cellW, cellW);
+    //         Graphics.Blit(slots[i].capturedTexture, compositeRT, 
+    //             new Vector2(cellW, cellW), 
+    //             new Vector2(x, y));
+    //     }
+    //
+    //     return compositeRT;
+    // }
 
-    private void registerSlot()
-    {
-        //look for the next unoccupied slot
-        while (slots[currentSlot].capturedTexture != null) {
-            currentSlot = (currentSlot + 1) % slots.Length;
-        }
-    }
+    // private void registerSlot()
+    // {
+    //     //look for the next unoccupied slot
+    //     while (slots[currentSlot].capturedTexture != null) {
+    //         currentSlot = (currentSlot + 1) % slots.Length;
+    //     }
+    // }
 
     void OnDestroy() {
         compositeRT?.Release();

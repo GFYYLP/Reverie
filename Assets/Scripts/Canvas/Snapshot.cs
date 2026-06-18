@@ -7,12 +7,14 @@ using UnityEngine.UI;
 public class Snapshot : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler {
     
-    public RenderTexture capturedTexture;
-    RawImage display;
+    public List<RenderTexture> capturedFrames;
+    RawImage display;  //UI display
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
     
     public float snapShotSize = 0.5f;
+    
+    private int frameIndex = 0;
 
     void Awake() {
         display = GetComponent<RawImage>();
@@ -22,9 +24,17 @@ public class Snapshot : MonoBehaviour,
         canvas = GetComponentInParent<Canvas>(); // hierarchy is ready by Start
     }
 
-    public void StoreCapture(RenderTexture rt) {
-        capturedTexture = rt;
-        display.texture = rt;
+    void Update()
+    {
+        if (capturedFrames != null && capturedFrames.Count > 1)
+        {
+            frameIndex 
+        }
+    }
+
+    public void StoreCapture(RenderTexture frame) {
+        capturedFrames.Add(frame);
+        display.texture = frame;
     
         // calculate the centered square region in UV space
         // float aspect = (float)rt.width / rt.height;
