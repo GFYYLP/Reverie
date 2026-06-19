@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,7 +8,9 @@ using UnityEngine.UI;
 public class Snapshot : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler {
     
+    public Material decalBaseMaterial; // URP/Decal material as template
     public List<RenderTexture> capturedFrames;
+    public List<Material> materials;
     RawImage display;  //UI display
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
@@ -15,6 +18,9 @@ public class Snapshot : MonoBehaviour,
     public float snapShotSize = 0.5f;
     
     private int frameIndex = 0;
+    private float memoryValue = 1f;
+    
+    public Material ActiveMaterial() => materials[frameIndex];
 
     void Awake() {
         display = GetComponent<RawImage>();
@@ -28,12 +34,23 @@ public class Snapshot : MonoBehaviour,
     {
         if (capturedFrames != null && capturedFrames.Count > 1)
         {
-            frameIndex 
+            frameIndex = ((frameIndex + 1) % capturedFrames.Count);
+            materials[frameIndex].SetTexture("_BaseMap", capturedFrames[frameIndex]);
         }
+        
+        //fade away over time 
+        // memoryValue -= Time.deltaTime * 0.1f;
+        //materials[frameIndex].color = new Color(1f, 1f, 1f, memoryValue);
+        // if (memoryValue <= 0)
+        // {
+        //     Destroy(gameObject);
+        // }
     }
 
     public void StoreCapture(RenderTexture frame) {
         capturedFrames.Add(frame);
+        materials.Add(new Material(decalBaseMaterial));
+        materials[frameIndex].SetTexture("_BaseMap", capturedFrames[frameIndex]);
         display.texture = frame;
     
         // calculate the centered square region in UV space
@@ -52,7 +69,7 @@ public class Snapshot : MonoBehaviour,
     }
 
     public void OnBeginDrag(PointerEventData e) {
-        if (capturedTexture == null) return;
+        if (capturedFrames[frameIndex] == null) return;
         
         // create a floating proxy image that follows the cursor
         dragProxy = new GameObject("DragProxy");
@@ -60,7 +77,7 @@ public class Snapshot : MonoBehaviour,
         dragProxy.transform.SetAsLastSibling(); // renders on top
         
         var img = dragProxy.AddComponent<RawImage>();
-        img.texture = capturedTexture;
+        img.texture = capturedFrames[frameIndex];
         img.raycastTarget = false; // dont block drops on slots beneath
         
         var rect = dragProxy.GetComponent<RectTransform>();
@@ -87,10 +104,20 @@ public class Snapshot : MonoBehaviour,
         var source = e.pointerDrag.GetComponent<Snapshot>();
         if (source == null) return;
         
-        (source.capturedTexture, capturedTexture) 
-            = (capturedTexture, source.capturedTexture);
+        (source.capturedFrames[frameIndex], capturedFrames[frameIndex]) 
+            = (capturedFrames[frameIndex], source.capturedFrames[frameIndex]);
         
-        source.display.texture = source.capturedTexture;
-        display.texture        = capturedTexture;
+        source.display.texture = source.capturedFrames[frameIndex];
+        display.texture        = capturedFrames[frameIndex];
+    }
+
+    private void OnDestroy()
+    {
+        //clean up materials
+        for (int i = 0; i < capturedFrames.Count; i++)
+        {
+            materials.RemoveAt(i);
+        }
+        
     }
 }

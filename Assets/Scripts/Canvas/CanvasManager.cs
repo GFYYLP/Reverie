@@ -90,6 +90,8 @@ public class CanvasManager : MonoBehaviour
                                         && Time.time - leftPressTime > 0.3f)
             {
                 holdTriggered = false;
+                
+                //video recording
                 onSnapshot?.Invoke(true);
             }
 

@@ -7,7 +7,7 @@ public class Composite : MonoBehaviour
 {
     // [SerializeField] private Camera cam;
     [SerializeField] private GameObject slotPrefab;
-    
+    [SerializeField] private Material decalBaseMaterial; // URP/Decal material as template
     [SerializeField] private int slotCount = 25;
     [SerializeField] private int canvasSize = 256;
     
@@ -42,6 +42,7 @@ public class Composite : MonoBehaviour
         for (int i = 0; i < slotCount; i++) {
             GameObject obj = Instantiate(slotPrefab, transform);
             Snapshot snap = obj.GetComponent<Snapshot>();
+            snap.decalBaseMaterial = decalBaseMaterial;
             if (snap == null) Debug.LogError($"Slot {i} prefab missing Snapshot component");
             else Debug.Log("i hate this");
             slots[i] = snap;
@@ -55,22 +56,27 @@ public class Composite : MonoBehaviour
     }
 
     private float currTimer = 0f;
-    private void TakeShot(bool isRecording = false)
+    private void TakeShot(bool isRecording)
     {
         RenderTexture rt = CaptureView();
         
         currTimer += Time.deltaTime;
         const float frameRate = 0.33f;
-        if (currTimer >= frameRate)
-        {
+        // if (currTimer >= frameRate)
+        // {
             slots[currentSlot].StoreCapture(rt);
             currTimer -= 0.33f;
-        }
+            
+            Debug.Log("recording frame " + currTimer);
+        //}
+        
+        Debug.Log("recsss " + currTimer);
 
         //move on to the next slot once we are done with adding frames to the current one
         if (!isRecording)  
         {
             ++currentSlot;
+            Debug.Log("huhh");
         }
     }
 

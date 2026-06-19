@@ -5,7 +5,6 @@ using UnityEngine.Rendering.Universal;
 
 public class ShotProjector : MonoBehaviour
 {
-    [SerializeField] private Material decalBaseMaterial; // URP/Decal material as template
     [SerializeField] private float projectionDepth = 5f; // how deep the projector volume extends
     [SerializeField] private int maxDecals = 16;         // pool size
     
@@ -54,7 +53,7 @@ public class ShotProjector : MonoBehaviour
         // mat.SetTexture("_BaseMap", shotRT);
         
         
-        dp.material = snap.material;
+        dp.material = snap.ActiveMaterial();
 
         dp.enabled = true;
         
