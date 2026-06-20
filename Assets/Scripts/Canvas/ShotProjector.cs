@@ -5,8 +5,9 @@ using UnityEngine.Rendering.Universal;
 
 public class ShotProjector : MonoBehaviour
 {
-    [SerializeField] private float projectionDepth = 5f; // how deep the projector volume extends
-    [SerializeField] private int maxDecals = 16;         // pool size
+    [SerializeField] private float projectionDepth = 0.2f; // thickness of the decal volume around the hit surface
+    [SerializeField] private float fallbackDistance = 1f;  // used when no surface is hit
+    [SerializeField] private int maxDecals = 16;            // pool size
     
     private DecalProjector[] pool;
     private int poolIndex = 0;
@@ -20,6 +21,7 @@ public class ShotProjector : MonoBehaviour
         for (int i = 0; i < maxDecals; i++)
         {
             GameObject go = new GameObject($"ShotDecal_{i}");
+            go.transform.SetParent(transform);
             DecalProjector dp = go.AddComponent<DecalProjector>();
             
             //dp.material = new Material(decalBaseMaterial);
@@ -33,20 +35,26 @@ public class ShotProjector : MonoBehaviour
     {
         Camera cam = Camera.main;
 
-        // Size (of projected frustum(?)): match the cropped square in world space
+        // Raycast to find the actual surface distance so we can scale the decal to match the captured FOV
+        float hitDistance = fallbackDistance;
+        if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit))
+            hitDistance = hit.distance;
+
         float fovRad     = cam.fieldOfView * composite.CaptureSize * Mathf.Deg2Rad;
         float halfHeight = Mathf.Tan(fovRad * 0.5f);
-        float sideLength = halfHeight * 2f; // square, so width == height
+        float sideLength = halfHeight * 2f * hitDistance; // scale by distance: orthographic box must match the perspective frustum at the hit point
 
-        //place projector at camera, pointing forward 
         DecalProjector dp = pool[poolIndex % maxDecals];
         poolIndex++;
 
-        dp.transform.position = cam.transform.position;
-        dp.transform.rotation = cam.transform.rotation;  // DecalProjector projects along its local -Y, so we rotate camera's +Z → -Y
+        // Extend the box from the camera to just past the hit point so angled surfaces are always inside the volume
+        float depth = hitDistance + projectionDepth;
 
-        dp.size = new Vector3(sideLength, sideLength, projectionDepth);
-        dp.pivot = new Vector3(0f, 0f, projectionDepth * 0.5f); //offset this from object's centre to camera's eye
+        dp.transform.position = cam.transform.position;
+        dp.transform.rotation = cam.transform.rotation;
+
+        dp.size  = new Vector3(sideLength, sideLength, depth);
+        dp.pivot = new Vector3(0f, 0f, depth * 0.5f);
 
         // stamp the RT onto a decal material instance
         
