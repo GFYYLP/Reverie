@@ -9,18 +9,20 @@ public class Snapshot : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler {
     
     public Material decalBaseMaterial; // URP/Decal material as template
+    public Material mat;
     public List<RenderTexture> capturedFrames;
-    public List<Material> materials;
+    
     RawImage display;  //UI display
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
     
     public float snapShotSize = 0.5f;
-    
+
+    private float frameRate = 0.33f;
     private int frameIndex = 0;
     private float memoryValue = 1f;
     
-    public Material ActiveMaterial() => materials[frameIndex];
+    public Material ActiveMaterial() => mat;
 
     void Awake() {
         display = GetComponent<RawImage>();
@@ -28,14 +30,21 @@ public class Snapshot : MonoBehaviour,
     
     void Start() {
         canvas = GetComponentInParent<Canvas>(); // hierarchy is ready by Start
+        mat = new Material(decalBaseMaterial);
     }
 
+    private float currTimer = 0f;
     void Update()
     {
-        if (capturedFrames != null && capturedFrames.Count > 1)
+        const float frameRate = 0.33f;
+        currTimer += Time.deltaTime;
+        if (capturedFrames != null && capturedFrames.Count > 1 && currTimer >= frameRate)
         {
             frameIndex = ((frameIndex + 1) % capturedFrames.Count);
-            materials[frameIndex].SetTexture("_BaseMap", capturedFrames[frameIndex]);
+            mat.SetTexture("_BaseMap", capturedFrames[frameIndex]);
+            display.texture = capturedFrames[frameIndex];
+            
+            currTimer -= frameRate;
         }
         
         //fade away over time 
@@ -49,8 +58,7 @@ public class Snapshot : MonoBehaviour,
 
     public void StoreCapture(RenderTexture frame) {
         capturedFrames.Add(frame);
-        materials.Add(new Material(decalBaseMaterial));
-        materials[frameIndex].SetTexture("_BaseMap", capturedFrames[frameIndex]);
+        mat.SetTexture("_BaseMap", capturedFrames[frameIndex]);  //apply once at init for single-frame photos
         display.texture = frame;
     
         // calculate the centered square region in UV space
@@ -114,10 +122,7 @@ public class Snapshot : MonoBehaviour,
     private void OnDestroy()
     {
         //clean up materials
-        for (int i = 0; i < capturedFrames.Count; i++)
-        {
-            materials.RemoveAt(i);
-        }
+        Destroy(mat);
         
     }
 }

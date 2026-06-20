@@ -82,15 +82,14 @@ public class CanvasManager : MonoBehaviour
         {
             if (Input.GetMouseButtonDown(0))
             {
-                holdTriggered =  true;
+                holdTriggered =  false;
                 leftPressTime =  Time.time;
             }
 
-            if (Input.GetMouseButton(0) && !holdTriggered
-                                        && Time.time - leftPressTime > 0.3f)
+            if (Input.GetMouseButton(0) && Time.time - leftPressTime > 0.5f)
             {
-                holdTriggered = false;
-                
+                holdTriggered = true;
+
                 //video recording
                 onSnapshot?.Invoke(true);
             }
@@ -99,6 +98,7 @@ public class CanvasManager : MonoBehaviour
             {
                 // if (!holdTriggered)
                 // {
+                    //one-shot capture
                     onSnapshot?.Invoke(false);
                 // }
             }

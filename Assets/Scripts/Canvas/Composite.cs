@@ -22,7 +22,7 @@ public class Composite : MonoBehaviour
     private RenderTexture compositeRT;
     
     private int currentSlot = 0;
-    private bool isCapturing = false;
+    private bool wasRecording = false;
     private float timer=0f;
 
     void Awake()
@@ -56,27 +56,27 @@ public class Composite : MonoBehaviour
     }
 
     private float currTimer = 0f;
+    const float frameRate = 0.33f;
     private void TakeShot(bool isRecording)
     {
-        RenderTexture rt = CaptureView();
-        
-        currTimer += Time.deltaTime;
-        const float frameRate = 0.33f;
-        // if (currTimer >= frameRate)
-        // {
-            slots[currentSlot].StoreCapture(rt);
-            currTimer -= 0.33f;
-            
-            Debug.Log("recording frame " + currTimer);
-        //}
-        
-        Debug.Log("recsss " + currTimer);
-
-        //move on to the next slot once we are done with adding frames to the current one
-        if (!isRecording)  
+        if (isRecording)
         {
+            wasRecording = true;
+            currTimer += Time.deltaTime;
+            if (currTimer >= frameRate)
+            {
+                StartCoroutine(CaptureView(slots[currentSlot]));
+                currTimer -= frameRate;
+            }
+        }
+        else
+        {
+            //if previously not recording, take a screenshot
+            if (!wasRecording) StartCoroutine(CaptureView(slots[currentSlot])); 
+
+            wasRecording = false;
+            currTimer = 0f;
             ++currentSlot;
-            Debug.Log("huhh");
         }
     }
 
@@ -86,33 +86,24 @@ public class Composite : MonoBehaviour
         shotProjector?.ProjectDecal(slots[shotSlot]);
     }
 
-    private RenderTexture CaptureView()
+    private IEnumerator CaptureView(Snapshot slot)
     {
-        RenderTexture rt = new RenderTexture(512, 512, 24);
+        yield return new WaitForEndOfFrame();
 
-        // store original state
-        float originalAspect = Camera.main.aspect;
-        float originalFOV    = Camera.main.fieldOfView;
+        int size = Mathf.RoundToInt(captureSize * Mathf.Min(Screen.width, Screen.height));
+        int x = (Screen.width  - size) / 2;
+        int y = (Screen.height - size) / 2;
 
-        // force square aspect to constrain the frustum
-        Camera.main.aspect = 1f;
+        Texture2D tex = new Texture2D(size, size, TextureFormat.RGB24, false);
+        tex.ReadPixels(new Rect(x, y, size, size), 0, 0);
+        tex.Apply();
 
-        // optionally narrow FOV to match captureSize crop feeling
-        // smaller captureSize = more zoomed in
-        Camera.main.fieldOfView = originalFOV * captureSize;
+        RenderTexture rt = new RenderTexture(size, size, 0, RenderTextureFormat.ARGB32);
+        Graphics.Blit(tex, rt);
+        Destroy(tex);
 
-        Camera.main.targetTexture = rt;
-        Camera.main.Render();
-        Camera.main.targetTexture = null;
-
-        // restore
-        Camera.main.aspect         = originalAspect;
-        Camera.main.fieldOfView    = originalFOV;
-
-        //parse grammar
+        slot.StoreCapture(rt);
         emotionManager.ParseGrammar(rt);
-        
-        return rt;
     }
 
     public void parseScreenGrammar()
