@@ -5,11 +5,13 @@ using UnityEngine;
 public class RoomManager : MonoBehaviour
 {
     [SerializeField] private RoomConfig roomConfig;
+    [SerializeField] private VolumeManager volumeManager;
     //[SerializeField] private RoomSpace prevRoom;
     [SerializeField] private RoomSpace currentRoom;
     //[SerializeField] private RoomSpace nextRoom;
     [SerializeField] private Door doorEnter;
     [SerializeField] private Door doorExit;
+    [SerializeField] private Transform booth;
     [SerializeField] private Movement player;
     
     [SerializeField] private bool dynamicRegen = false;
@@ -41,6 +43,7 @@ public class RoomManager : MonoBehaviour
     public void AdvanceRoom()
     {
         roomConfig.UpdateScores();
+        volumeManager.SetRoom(roomConfig);
         currentRoom.Generate(roomConfig);
         currentMesh = currentRoom.GetComponent<MeshRenderer>();
         
@@ -60,6 +63,7 @@ public class RoomManager : MonoBehaviour
         //place the door on bottom right corner
         doorExit.transform.position = corners[0];
         doorEnter.transform.position = corners[5];
+        booth.transform.position = corners[5];
 
         Vector3 prevPos = player.transform.position;
         

@@ -48,7 +48,8 @@ public class RoomSpace : MonoBehaviour
         // //grammar parameters 
         sdfShader.SetFloat("spikeScore",     config.spikeScore);
         sdfShader.SetFloat("symmetryScore",  config.symmetryScore);
-        sdfShader.SetFloat("verticalStretch",config.verticalityScore);
+        sdfShader.SetFloat("verticalityScore", config.verticalityScore);
+        sdfShader.SetFloat("seed",             config.seed);
         sdfShader.SetFloat("roomScale",      config.roomScale);
         sdfShader.SetFloat( "densityScore",      config.densityScore);
         sdfShader.SetFloat( "fragmentationScore",config.fragmentationScore);

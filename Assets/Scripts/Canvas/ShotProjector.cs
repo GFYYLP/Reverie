@@ -55,14 +55,7 @@ public class ShotProjector : MonoBehaviour
 
         dp.size  = new Vector3(sideLength, sideLength, depth);
         dp.pivot = new Vector3(0f, 0f, depth * 0.5f);
-
-        // stamp the RT onto a decal material instance
-        
-        // mat.SetTexture("_BaseMap", shotRT);
-        
-        
         dp.material = snap.ActiveMaterial();
-
         dp.enabled = true;
         
         Debug.Log($"Projected decal at {dp.transform.position} with size {dp.size}");
