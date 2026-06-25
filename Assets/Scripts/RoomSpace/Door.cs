@@ -20,11 +20,17 @@ public class Door : MonoBehaviour
     
     void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Player"))
-        {
-            playerEntered?.Invoke();
-            Debug.Log("Player entered");
+        
+        
+        // if (CompareTag("ExitDoor"))
+        // {
+            if (other.CompareTag("Player"))
+            {
+                playerEntered?.Invoke();
+                Debug.Log("Player entered exit door");
+            //}
         }
+
     }
     
     // Start is called before the first frame update

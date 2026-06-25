@@ -61,15 +61,17 @@ public class RoomManager : MonoBehaviour
         
         
         //place the door on bottom right corner
-        doorExit.transform.position = corners[0];
-        doorEnter.transform.position = corners[5];
+        doorExit.transform.position = corners[0] - new Vector3(5f, 0f, 5f);
+        doorEnter.transform.position = corners[5] + new Vector3(5f, 0f, 5f);
         booth.transform.position = corners[5];
 
         Vector3 prevPos = player.transform.position;
         
         //teleport player for illusion of advancing into the next one
         //player.transform.position = Vector3.zero;//doorEnter.transform.position;
-        player.Warp(doorEnter.transform.position);
+        player.Warp(new Vector3(doorEnter.transform.position.x,
+                                -12f,
+                                doorEnter.transform.position.z));
     }
     
 

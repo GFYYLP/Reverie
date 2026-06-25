@@ -55,6 +55,11 @@ public class Movement : MonoBehaviour {
         Move();
         Bob();
         Sway();
+
+        if (transform.position.y < -100.0f)
+        {
+            transform.position =  new Vector3(transform.position.x, 200.0f, transform.position.z);
+        }
     }
 
     void Look() {

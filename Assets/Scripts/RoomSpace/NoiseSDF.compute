@@ -13,7 +13,7 @@ float densityScore;
 float fragmentationScore;
 float radialScore;
 
-// ── SDF primitives ─────────────────────────────────────────────────────────────
+//sdf primitives
 float sdBox(float3 p, float3 b) {
     float3 q = abs(p) - b;
     return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
@@ -42,14 +42,14 @@ float sdCone(float3 p, float angle, float height) {
     return length(q - tip * clamp(dt, 0.0, height));
 }
 
-// ── SDF combinators ────────────────────────────────────────────────────────────
+//SDF combinators
 float sdfUnion(float a, float b) { return min(a, b); }
 float sdfSmoothUnion(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
     return lerp(b, a, h) - k * h * (1.0 - h);
 }
 
-// ── Hash / noise ───────────────────────────────────────────────────────────────
+//noise
 float hash(float3 p) {
     p = frac(p * float3(443.8975, 397.2973, 491.1871));
     p += dot(p.zxy, p.yxz + 19.19);
@@ -74,7 +74,7 @@ float noise(float3 p) {
         f.z
     );
 }
-// layered noise — used for domain warping at high unease
+// layered noise, used for domain warping at high unease
 float fbm(float3 p) {
     float v = 0.0, a = 0.5;
     [unroll] for (int i = 0; i < 4; i++) {
@@ -85,7 +85,7 @@ float fbm(float3 p) {
     return v;
 }
 
-// ── Object layout ──────────────────────────────────────────────────────────────
+//object layout
 float3 objectPosition(int i, int count) {
     float t     = (float)i / max(count - 1, 1);
     float angle = t * 6.28318 + seed * 0.017; // seed rotates the ring each room
@@ -107,11 +107,11 @@ float3 objectPosition(int i, int count) {
     float3 variance = (hash3(seedVec) * 2.0 - 1.0) * lerp(0.0, 0.25, fragmentationScore);
 
     // clamp center so shape radius (max ~0.28) stays inside 0.95 wall regardless of roomScale
-    float3 raw = clamp(pos + variance, -0.65, 0.65);
+    float3 raw = clamp(pos + variance, -0.85, 0.85);
     return raw * roomScale;
 }
 
-// ── Shape selection ────────────────────────────────────────────────────────────
+//shape selection
 // Each object draws a "personality" from its seed-varied hash, then grammar
 // scores bias which archetype it lands on:
 //   content-like (low spike, low vert) → capsule / torus
@@ -154,13 +154,13 @@ float objectSDF(float3 p, int idx, float scale) {
     return d;
 }
 
-// ── Scene ──────────────────────────────────────────────────────────────────────
+//scene
 float sceneSDF(float3 p) {
     int   count      = (int)round(lerp(4, 16, densityScore));
     float uneaseProxy = clamp(spikeScore * 0.5 + fragmentationScore * 0.5, 0.0, 1.0);
 
-    // room walls — evaluated on clean p so geometry stays closed
-    float d = -sdBox(p, float3(1.0, 1.0, 1.0) * roomScale * 0.95);
+    //room walls: evaluated on clean p so geometry stays closed
+    float d = -sdBox(p, float3(1.0, 1.0, 1.0) * roomScale * 1.25);
 
     for (int i = 0; i < count; i++) {
         float3 origin = objectPosition(i, count);

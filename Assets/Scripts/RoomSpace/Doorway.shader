@@ -52,7 +52,10 @@ Shader "Unlit/Doorway"
                 // apply fog
                 UNITY_APPLY_FOG(i.fogCoord, col);
                 
-                return float4(0.0, 0.0, 0.0, 1.0);//col;
+                
+                float finalAlpha =  abs(i.uv.x);
+                
+                return float4(0.0, 0.0, 0.0, 0.5);//col;
             }
             ENDCG
         }
