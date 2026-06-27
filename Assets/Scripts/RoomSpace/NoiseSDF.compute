@@ -48,6 +48,18 @@ float sdfSmoothUnion(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
     return lerp(b, a, h) - k * h * (1.0 - h);
 }
+float sdfIntersection(float a, float b) { return max(a, b); }
+float sdfDifference(float a, float b)   { return max(a, -b); }
+// Rotate around Y-axis — used to tilt objects off-axis
+float3x3 rotY(float a) {
+    float s = sin(a), c = cos(a);
+    return float3x3(c, 0, s,  0, 1, 0,  -s, 0, c);
+}
+// Rotate around Z-axis — used to lean objects sideways
+float3x3 rotZ(float a) {
+    float s = sin(a), c = cos(a);
+    return float3x3(c, -s, 0,  s, c, 0,  0, 0, 1);
+}
 
 //noise
 float hash(float3 p) {
@@ -112,43 +124,101 @@ float3 objectPosition(int i, int count) {
 }
 
 //shape selection
-// Each object draws a "personality" from its seed-varied hash, then grammar
-// scores bias which archetype it lands on:
-//   content-like (low spike, low vert) → capsule / torus
-//   unease-like  (high spike)          → torus / octahedron
-//   awe-like     (high vert)           → cylinder / tall octahedron
-//   both spike + vert                  → cone-spiked octahedron
 float objectSDF(float3 p, int idx, float scale) {
     float3 hv = hash3(float3(seed + idx * 1.3, seed + idx * 2.9, seed + idx * 5.1));
 
-    // biased roll: spike pulls toward sharp archetypes, verticality toward tall
-    float roll = frac(hv.x + spikeScore * 0.45 - verticalityScore * 0.1);
+    //style archetypes 
+    bool isMonolithic = (verticalityScore > 0.65 && spikeScore < 0.35);
+    bool isAggressive = (spikeScore > 0.55);
+    bool isBaroque    = (symmetryScore > 0.65 && fragmentationScore > 0.35);
+    // fallback: organic/soft (capsules, toruses, low noise)
 
-    float h = scale * lerp(0.55, 2.8, verticalityScore);
-    float r = scale * 0.3;
-    float d;
-
-    if (roll < 0.30) {
-        // capsule — warm, body-like silhouette
-        d = sdCapsule(p, float3(0, -h * 0.5, 0), float3(0, h * 0.5, 0), r);
-    } else if (roll < 0.52) {
-        // torus — closed loop, obsessive / cyclical
-        float R = scale * lerp(0.45, 0.7, hv.y);
-        d = sdTorus(p, R, scale * 0.18);
-    } else if (roll < 0.75) {
-        // octahedron — crystalline, alien, awe-inducing
-        float3 stretched = p * float3(1.0, lerp(1.0, 2.2, verticalityScore), 1.0);
-        d = sdOctahedron(stretched, scale * 0.9);
-    } else {
-        // cylinder — pillar, monumental weight
-        d = sdCylinder(p, h * 0.5, r * 0.75);
+    
+    //per-object tilt
+    float tiltAmount;
+    if (isMonolithic) {  //stays upright
+        tiltAmount = 0.0;
+    } else if (isAggressive) {  //wild lean driven by fbm.
+        // chaotic lean: different per object, large angle
+        float uneaseProxy = clamp(spikeScore * 0.5 + fragmentationScore * 0.5, 0.0, 1.0);
+        tiltAmount = (hv.z * 2.0 - 1.0) * uneaseProxy * 1.1; // up to ~63 degrees
+    } else {  //gentle sway from a smooth hash
+        tiltAmount = (hv.z * 2.0 - 1.0) * 0.22; // gentle ±~12 degrees
     }
 
-    // spike score fuses a cone into any base shape
-    if (spikeScore > 0.15) {
-        float cone = sdCone(p, lerp(0.15, 0.58, spikeScore), scale * 2.0);
-        float k    = lerp(0.35, 0.04, spikeScore);
+    float yaw  = hv.y * 6.28318; // random facing per object
+    float3 lp  = mul(rotZ(tiltAmount), mul(rotY(yaw), p));
+
+    
+    //archetype-driven parameters
+    float h, r;
+    if (isMonolithic) {
+        h = scale * lerp(2.2, 3.5, verticalityScore); // tall and heavy
+        r = scale * lerp(0.28, 0.38, 1.0 - spikeScore);
+    } else if (isAggressive) {
+        h = scale * lerp(1.2, 2.8, verticalityScore);
+        r = scale * 0.22; // narrow — spires, not columns
+    } else if (isBaroque) {
+        h = scale * lerp(0.8, 1.8, verticalityScore);
+        r = scale * lerp(0.3, 0.5, symmetryScore); // wider, decorative
+    } else {
+        h = scale * lerp(0.55, 1.6, verticalityScore);
+        r = scale * 0.3;
+    }
+
+    
+    //base shape selection
+    float roll = frac(hv.x + spikeScore * 0.45 - verticalityScore * 0.1);
+    float d;
+    if (isMonolithic) {
+        // Always cylinder — weight and permanence
+        d = sdCylinder(lp, h * 0.5, r * 0.75);
+
+        // Architectural trim: pedestal at base, capital at top
+        float3 baseP = lp + float3(0, h * 0.55, 0);
+        float3 capP  = lp - float3(0, h * 0.55, 0);
+        float  tw    = r * 1.6; // trim width
+        float  th    = scale * 0.07;
+        float pedestal = sdBox(baseP, float3(tw, th, tw));
+        float capital  = sdBox(capP,  float3(tw, th, tw));
+        d = sdfSmoothUnion(d, pedestal, 0.04);
+        d = sdfSmoothUnion(d, capital,  0.04);
+
+    } else if (isAggressive) {
+        // Cone-spiked octahedron — sharp, unstable
+        float3 stretched = lp * float3(1.0, lerp(1.0, 2.4, verticalityScore), 1.0);
+        d = sdOctahedron(stretched, scale * 0.85);
+        float cone = sdCone(lp, lerp(0.18, 0.55, spikeScore), scale * 2.2);
+        float k    = lerp(0.3, 0.03, spikeScore);
         d = sdfSmoothUnion(d, cone, k);
+
+        // CSG lattice subtraction: carves crystalline voids into the mass
+        float3 cutP = frac(lp * (3.5 + spikeScore * 2.0)) - 0.5;
+        float  lattice = sdOctahedron(cutP, 0.3);
+        d = sdfDifference(d, lattice);
+
+    } else if (isBaroque) {
+        // Torus + octahedron intersection — ornate, filigree-like
+        float R = scale * lerp(0.4, 0.65, hv.y);
+        float dTorus = sdTorus(lp, R, scale * 0.18);
+        float3 sym   = lp * float3(1.0, lerp(1.0, 1.8, verticalityScore), 1.0);
+        float dOcta  = sdOctahedron(sym, scale * 0.95);
+
+        // Intersection only when symmetry is strong enough not to hollow to nothing
+        if (symmetryScore > 0.80) {
+            d = sdfIntersection(dTorus, dOcta); // crystalline filigree
+        } else {
+            d = sdfSmoothUnion(dTorus, dOcta, 0.08 * scale);
+        }
+
+    } else {
+        //organic: capsule or torus, warm and body-like
+        if (roll < 0.55) {
+            d = sdCapsule(lp, float3(0, -h * 0.5, 0), float3(0, h * 0.5, 0), r);
+        } else {
+            float R = scale * lerp(0.45, 0.7, hv.y);
+            d = sdTorus(lp, R, scale * 0.18);
+        }
     }
 
     return d;
@@ -166,7 +236,7 @@ float sceneSDF(float3 p) {
         float3 origin = objectPosition(i, count);
         float3 localP = p - origin;
 
-        // domain warp: high unease twists local space around each object
+        //high unease warps local space around each object
         float  warpAmt = uneaseProxy * 0.28;
         float3 seedOff = float3(seed * 0.013, seed * 0.017, seed * 0.011);
         float3 wp      = localP + warpAmt * float3(
@@ -175,14 +245,21 @@ float sceneSDF(float3 p) {
             fbm(localP * 1.8 + seedOff + 3.4)
         );
 
+        //shv 
         float3 shv   = hash3(float3(seed + i, seed + i * 1.7, seed + i * 2.9));
-        float  scale = (0.15 + shv.x * 0.13) * roomScale; // 0.15–0.28 shader-space; surface stays within 0.95 wall
+        float  scale = (0.15 + shv.x * 0.13); // 0.15–0.28 shader-space; surface stays within 0.95 wall
 
         float obj = objectSDF(wp, i, scale);
 
         // surface noise: symmetry suppresses it, unease amplifies
         obj += noise(localP * (2.2 / max(roomScale, 0.01)))
                * (1.0 - symmetryScore) * uneaseProxy * 0.12 * roomScale;
+        
+        // Bias objects to clump away from boundaries.
+        // As p approaches the room edge, objects fade out smoothly.
+        float3 normalized = abs(p) / (roomScale * 1.25); // 0 at center, 1 at wall
+        float boundaryFade = 1.0 - smoothstep(0.55, 0.85, max(normalized.x, max(normalized.y, normalized.z)));
+        obj = lerp(roomScale * 2.0, obj, boundaryFade); // push obj positive (empty) near edges
 
         d = sdfUnion(d, obj);
     }

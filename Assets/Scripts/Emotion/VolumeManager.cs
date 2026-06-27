@@ -8,7 +8,8 @@ public class VolumeManager : MonoBehaviour
 {
     private Volume volume;
     [SerializeField] private Renderer roomRenderer;
-
+    [SerializeField] private float contrastVal=100f;
+    
     private float roomHue = 0f;
 
     public void SetRoom(RoomConfig config) {
@@ -58,7 +59,7 @@ public class VolumeManager : MonoBehaviour
             float sat = Mathf.Clamp01(0.2f + content * 0.2f - unease * 0.15f - awe * 0.1f);
             float val = Mathf.Clamp01(1f - unease * 0.12f + awe * 0.05f);
             color.colorFilter.value = Color.HSVToRGB(hue, sat, val);
-            color.contrast.value = Mathf.Lerp(20f, -10f, content);
+            color.contrast.value = Mathf.Lerp(contrastVal, -contrastVal, unease);
         }
 
         // ── Vignette ───────────────────────────────────────────────────
@@ -78,12 +79,12 @@ public class VolumeManager : MonoBehaviour
             ca.intensity.value = unease * 0.4f;
         }
 
-        // ── Film grain ─────────────────────────────────────────────────
-        // unease = anxiety noise
-        if (volume.profile.TryGet<FilmGrain>(out var grain)) {
-            grain.intensity.value = unease * 0.4f;
-            grain.response.value = 0.8f;
-        }
+        // // ── Film grain ─────────────────────────────────────────────────
+        // // unease = anxiety noise
+        // if (volume.profile.TryGet<FilmGrain>(out var grain)) {
+        //     grain.intensity.value = unease * 0.4f;
+        //     grain.response.value = 0.8f;
+        // }
 
         // ── Depth of field ─────────────────────────────────────────────
         // awe = dreamlike, vast; world slightly loses focus at edges

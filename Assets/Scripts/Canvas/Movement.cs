@@ -6,7 +6,8 @@ public class Movement : MonoBehaviour {
     [SerializeField] private float moveSpeed    = 5f;
     [SerializeField] private float jumpForce    = 5f;
     [SerializeField] private float gravity      = 9.81f;
-
+    [SerializeField] private float warpPos      = 200f;
+    
     [Header("Look")]
     [SerializeField] private float mouseSensitivity = 1.5f;
     [SerializeField] private float maxPitch         = 89f;
@@ -56,9 +57,9 @@ public class Movement : MonoBehaviour {
         Bob();
         Sway();
 
-        if (transform.position.y < -100.0f)
+        if (transform.position.y < -warpPos)
         {
-            transform.position =  new Vector3(transform.position.x, 200.0f, transform.position.z);
+            transform.position =  new Vector3(transform.position.x, warpPos, transform.position.z);
         }
     }
 
@@ -86,7 +87,7 @@ public class Movement : MonoBehaviour {
         if (cc.isGrounded) {
             verticalVelocity = Input.GetKey(KeyCode.Space) ? jumpForce : -2f;
         } else {
-            verticalVelocity -= gravity * Time.deltaTime;
+            verticalVelocity -= gravity * Time.deltaTime * 3f;
         }
 
         move.y = verticalVelocity;

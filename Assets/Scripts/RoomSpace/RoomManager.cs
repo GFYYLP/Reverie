@@ -14,6 +14,7 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private Transform booth;
     [SerializeField] private Movement player;
     
+    [SerializeField] private float doorOffset;
     [SerializeField] private bool dynamicRegen = false;
     private MeshRenderer currentMesh;
 
@@ -61,16 +62,16 @@ public class RoomManager : MonoBehaviour
         
         
         //place the door on bottom right corner
-        doorExit.transform.position = corners[0] - new Vector3(5f, 0f, 5f);
-        doorEnter.transform.position = corners[5] + new Vector3(5f, 0f, 5f);
-        booth.transform.position = corners[5];
+        doorExit.transform.position = corners[0] - new Vector3(5f + doorOffset, corners[7].y*0.5f, 5f + doorOffset);
+        doorEnter.transform.position = corners[5] + new Vector3(5f - doorOffset, corners[7].y*0.5f, 5f - doorOffset);
+        booth.transform.position = new Vector3(corners[5].x, corners[7].y*0.5f, corners[5].z);
 
         Vector3 prevPos = player.transform.position;
         
         //teleport player for illusion of advancing into the next one
         //player.transform.position = Vector3.zero;//doorEnter.transform.position;
         player.Warp(new Vector3(doorEnter.transform.position.x,
-                                -12f,
+            booth.transform.position.y+5f,
                                 doorEnter.transform.position.z));
     }
     
