@@ -44,7 +44,6 @@ public class Composite : MonoBehaviour
             Snapshot snap = obj.GetComponent<Snapshot>();
             snap.decalBaseMaterial = decalBaseMaterial;
             if (snap == null) Debug.LogError($"Slot {i} prefab missing Snapshot component");
-            else Debug.Log("i hate this");
             slots[i] = snap;
         }
     }

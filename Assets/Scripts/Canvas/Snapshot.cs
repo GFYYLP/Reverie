@@ -26,6 +26,7 @@ public class Snapshot : MonoBehaviour,
 
     void Awake() {
         display = GetComponent<RawImage>();
+        capturedFrames = new List<RenderTexture>();
     }
     
     void Start() {
@@ -77,7 +78,7 @@ public class Snapshot : MonoBehaviour,
     }
 
     public void OnBeginDrag(PointerEventData e) {
-        if (capturedFrames[frameIndex] == null) return;
+        if (capturedFrames == null || capturedFrames.Count == 0) return;
         
         // create a floating proxy image that follows the cursor
         dragProxy = new GameObject("DragProxy");
@@ -108,15 +109,23 @@ public class Snapshot : MonoBehaviour,
     }
 
     public void OnDrop(PointerEventData e) {
-        // swap with whatever was dragged onto us
         var source = e.pointerDrag.GetComponent<Snapshot>();
-        if (source == null) return;
-        
-        (source.capturedFrames[frameIndex], capturedFrames[frameIndex]) 
-            = (capturedFrames[frameIndex], source.capturedFrames[frameIndex]);
-        
-        source.display.texture = source.capturedFrames[frameIndex];
-        display.texture        = capturedFrames[frameIndex];
+        if (source == null || source.capturedFrames.Count == 0) return;
+
+        // swap entire frame lists so multi-frame photos transfer completely
+        (source.capturedFrames, capturedFrames) = (capturedFrames, source.capturedFrames);
+
+        source.frameIndex = 0;
+        frameIndex = 0;
+
+        RenderTexture srcTex  = source.capturedFrames.Count > 0 ? source.capturedFrames[0] : null;
+        RenderTexture destTex = capturedFrames.Count > 0 ? capturedFrames[0] : null;
+
+        source.display.texture = srcTex;
+        display.texture        = destTex;
+
+        if (srcTex  != null) source.mat.SetTexture("_BaseMap", srcTex);
+        if (destTex != null) mat.SetTexture("_BaseMap", destTex);
     }
 
     private void OnDestroy()

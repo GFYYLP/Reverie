@@ -15,14 +15,14 @@ public class CanvasManager : MonoBehaviour
     [SerializeField] private Color bottomVignetteColor;
     [SerializeField] private Color leftVignetteColor;
     [SerializeField] private Color rightVignetteColor;
-    
+        
     //[SerializeField] private RoomManager roomManager;
     
     private float vignetteDuration = 0.2f;
     private bool vignetteAnimationFinished=false;
     
     private Composite composite;
-    private bool inCamera = false;
+    [HideInInspector] public bool inCamera = false;
     //private float captureRegionSize=0;
     private float targetHeight = 0;
     private float targetWidth = 0;
