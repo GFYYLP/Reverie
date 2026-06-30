@@ -130,10 +130,17 @@ public class Movement : MonoBehaviour {
         currentSway = Vector3.Lerp(currentSway, targetSway, Time.deltaTime * swaySmoothing);
     }
 
-    public void Warp(Vector3 pos)
+    public void Warp(Vector3 pos, float? facingYaw = null)
     {
         cc.enabled = false;
         transform.position = pos;
+        if (facingYaw.HasValue)
+        {
+            yaw = facingYaw.Value;
+            pitch = 0f;
+            transform.rotation = Quaternion.Euler(0, yaw, 0);
+            cam.localRotation = Quaternion.identity;
+        }
         cc.enabled = true;
     }
 }

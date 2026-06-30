@@ -116,7 +116,9 @@ public class Snapshot : MonoBehaviour,
         (source.capturedFrames, capturedFrames) = (capturedFrames, source.capturedFrames);
 
         source.frameIndex = 0;
+        source.currTimer = 0f;
         frameIndex = 0;
+        currTimer = 0f;
 
         RenderTexture srcTex  = source.capturedFrames.Count > 0 ? source.capturedFrames[0] : null;
         RenderTexture destTex = capturedFrames.Count > 0 ? capturedFrames[0] : null;

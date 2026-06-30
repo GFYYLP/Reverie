@@ -6,14 +6,12 @@ public class RoomManager : MonoBehaviour
 {
     [SerializeField] private RoomConfig roomConfig;
     [SerializeField] private VolumeManager volumeManager;
-    //[SerializeField] private RoomSpace prevRoom;
     [SerializeField] private RoomSpace currentRoom;
-    //[SerializeField] private RoomSpace nextRoom;
     [SerializeField] private Door doorEnter;
     [SerializeField] private Door doorExit;
     [SerializeField] private Transform booth;
     [SerializeField] private Movement player;
-    
+
     [SerializeField] private float doorOffset;
     [SerializeField] private bool dynamicRegen = false;
     private MeshRenderer currentMesh;
@@ -66,13 +64,18 @@ public class RoomManager : MonoBehaviour
         doorEnter.transform.position = corners[5] + new Vector3(5f - doorOffset, corners[7].y*0.5f, 5f - doorOffset);
         booth.transform.position = new Vector3(corners[5].x, corners[7].y*0.5f, corners[5].z);
 
-        Vector3 prevPos = player.transform.position;
-        
-        //teleport player for illusion of advancing into the next one
-        //player.transform.position = Vector3.zero;//doorEnter.transform.position;
-        player.Warp(new Vector3(doorEnter.transform.position.x,
-            booth.transform.position.y+5f,
-                                doorEnter.transform.position.z));
+        Vector3 warpPos = new Vector3(doorEnter.transform.position.x,
+            booth.transform.position.y + 5f,
+            doorEnter.transform.position.z);
+
+        // face the player inward toward the room center so they exit the dark door already oriented
+        Vector3 toCenter = bounds.center - warpPos;
+        toCenter.y = 0f;
+        float inwardYaw = toCenter.sqrMagnitude > 0.001f
+            ? Quaternion.LookRotation(toCenter.normalized).eulerAngles.y
+            : 0f;
+
+        player.Warp(warpPos, inwardYaw);
     }
     
 

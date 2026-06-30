@@ -49,7 +49,6 @@ void Analyze(uint3 id : SV_DispatchThreadID, uint gIdx : SV_GroupIndex) {
     brightnessSum /= 64.0;
     edgeSum      /= 64.0;
     //warmthSum    = saturate((warmthSum / 64.0 + 1.0) * 0.5); // normalize to 0-1
-
     // second pass: variance and symmetry
     // symmetry: compare pixel i to its horizontal mirror
     // in flattened 8x8: mirror of (x,y) is (7-x, y) = gIdx with x flipped

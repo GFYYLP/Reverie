@@ -5,23 +5,23 @@ using UnityEngine;
 
 public class Door : MonoBehaviour
 {
-    
+
     private Material material;
 
     public event Action playerEntered ;
-    
+
     void Awake()
     {
         material = GetComponent<Renderer>().material;
-        
+
         //pitch black mesh
         material.SetColor("_BaseColor", Color.black);
     }
-    
+
     void OnTriggerEnter(Collider other)
     {
-        
-        
+
+
         // if (CompareTag("ExitDoor"))
         // {
             if (other.CompareTag("Player"))
@@ -32,16 +32,16 @@ public class Door : MonoBehaviour
         }
 
     }
-    
+
     // Start is called before the first frame update
     void Start()
     {
-        
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

@@ -2,9 +2,10 @@
 
 A first-person dreamscape where the player reconstructs fragmented memories from abstract geometry, not by solving, but by looking carefully and choosing what to keep.
 
-![Unity](https://img.shields.io/badge/Unity-6000.0-black?logo=unity)
+![Unity](https://img.shields.io/badge/Unity-black?logo=unity)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![Platform](https://img.shields.io/badge/platform-3D-blue)
+![gameplay](demo.gif)
 
 ---
 
@@ -80,4 +81,4 @@ Assets/Scripts/
 
 ## Status
 
-Core systems are implemented and running: procedural room generation, emotion parsing, post-processing feedback, snapshot capture, animated flipnotes, and decal projection. The remaining work is closing the feedback loops: wiring emotional state into room grammar generation, building the composite scoring pipeline against reference images, and tuning the experience end-to-end. No release timeline.
+Core systems are implemented and running: procedural room generation, emotion parsing, post-processing feedback, snapshot capture, animated flipnotes, and decal projection. The remaining work is improving visual presentation and closing the feedback loops: wiring emotional state into room grammar generation, building the composite scoring pipeline against reference images, and tuning the experience end-to-end.
