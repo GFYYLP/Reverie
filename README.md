@@ -5,7 +5,9 @@ A first-person dreamscape where the player reconstructs fragmented memories from
 ![Unity](https://img.shields.io/badge/Unity-black?logo=unity)
 ![Status](https://img.shields.io/badge/status-in%20development-yellow)
 ![Platform](https://img.shields.io/badge/platform-3D-blue)
-![gameplay](demo.gif)
+<p align="center">
+  <img src="demo.gif" width="850" alt="Gameplay">
+</p>
 
 ---
 
