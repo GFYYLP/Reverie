@@ -254,7 +254,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: 09fd556dc986ba141b342f4afd9e659d, type: 3}
+  m_Texture: {fileID: 2800000, guid: 18839a687f8a9db41803ca4c59c44fb6, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -299,10 +299,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45b517093102cf34aa647d98dada5603, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 2
+  moveSpeed: 5
   jumpForce: 20
   gravity: 20
-  warpPos: 400
+  warpPos: 600
   mouseSensitivity: 1.5
   maxPitch: 89
   bobFrequency: 10
@@ -384,7 +384,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38268343, z: -0, w: 0.92387956}
   m_LocalPosition: {x: 20.39, y: 1.5, z: -6.31}
-  m_LocalScale: {x: 5, y: 1000, z: 7.5}
+  m_LocalScale: {x: 0.1, y: 1000, z: 7.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 449357201}
@@ -2724,7 +2724,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38268343, z: -0, w: 0.92387956}
   m_LocalPosition: {x: 20.39, y: 1.5, z: -6.31}
-  m_LocalScale: {x: 5, y: 1000, z: 7.5}
+  m_LocalScale: {x: 0.1, y: 1000, z: 7.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 339864788}
@@ -3046,8 +3046,8 @@ SceneRoots:
   m_Roots:
   - {fileID: 410087041}
   - {fileID: 832575519}
-  - {fileID: 909999516}
   - {fileID: 1383670678}
+  - {fileID: 909999516}
   - {fileID: 249626270}
   - {fileID: 1580314732}
   - {fileID: 243765493}

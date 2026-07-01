@@ -65,7 +65,7 @@ public class RoomManager : MonoBehaviour
         booth.transform.position = new Vector3(corners[5].x, corners[7].y*0.5f, corners[5].z);
 
         Vector3 warpPos = new Vector3(doorEnter.transform.position.x,
-            booth.transform.position.y + 5f,
+            booth.transform.position.y + booth.localScale.y * 0.5f,
             doorEnter.transform.position.z);
 
         // face the player inward toward the room center so they exit the dark door already oriented
