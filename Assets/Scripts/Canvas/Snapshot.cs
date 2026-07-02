@@ -24,14 +24,22 @@ public class Snapshot : MonoBehaviour,
     
     public Material ActiveMaterial() => mat;
 
+    public RenderTexture RepresentativeFrame =>
+        capturedFrames != null && capturedFrames.Count > 0 ? capturedFrames[0] : null;
+
     void Awake() {
         display = GetComponent<RawImage>();
         capturedFrames = new List<RenderTexture>();
     }
+
+    public void Init(Material baseMaterial) {
+        decalBaseMaterial = baseMaterial;
+        mat = new Material(baseMaterial);
+    }
     
     void Start() {
         canvas = GetComponentInParent<Canvas>(); // hierarchy is ready by Start
-        mat = new Material(decalBaseMaterial);
+        
     }
 
     private float currTimer = 0f;
@@ -55,6 +63,11 @@ public class Snapshot : MonoBehaviour,
         // {
         //     Destroy(gameObject);
         // }
+    }
+
+    public void SetDefault(RenderTexture frame) {
+        display.texture = frame;
+        mat.SetTexture("_BaseMap", frame);
     }
 
     public void StoreCapture(RenderTexture frame) {

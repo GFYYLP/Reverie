@@ -21,6 +21,7 @@ public class Composite : MonoBehaviour
     private RenderTexture cameraRT;
     private RenderTexture compositeRT;
     
+    private RenderTexture defaultRT;
     private int currentSlot = 0;
     private bool wasRecording = false;
     private float timer=0f;
@@ -38,14 +39,28 @@ public class Composite : MonoBehaviour
             RenderTextureFormat.ARGB32);
         
         
+        // shared default white RT — all empty slots reference this
+        defaultRT = new RenderTexture(2, 2, 0, RenderTextureFormat.ARGB32);
+        defaultRT.wrapMode = TextureWrapMode.Repeat;
+        RenderTexture prev = RenderTexture.active;
+        RenderTexture.active = defaultRT;
+        GL.Clear(true, true, Color.white);
+        RenderTexture.active = prev;
+
         slots = new Snapshot[slotCount];
         for (int i = 0; i < slotCount; i++) {
             GameObject obj = Instantiate(slotPrefab, transform);
             Snapshot snap = obj.GetComponent<Snapshot>();
-            snap.decalBaseMaterial = decalBaseMaterial;
-            if (snap == null) Debug.LogError($"Slot {i} prefab missing Snapshot component");
+            if (snap == null) { Debug.LogError($"Slot {i} prefab missing Snapshot component"); continue; }
+            snap.Init(decalBaseMaterial);
             slots[i] = snap;
         }
+    }
+
+    void Start()
+    {
+        foreach (var slot in slots)
+            slot.SetDefault(defaultRT);
     }
 
     private void OnEnable()
@@ -98,6 +113,7 @@ public class Composite : MonoBehaviour
         tex.Apply();
 
         RenderTexture rt = new RenderTexture(size, size, 0, RenderTextureFormat.ARGB32);
+        rt.wrapMode = TextureWrapMode.Repeat;
         Graphics.Blit(tex, rt);
         Destroy(tex);
 
@@ -170,6 +186,7 @@ public class Composite : MonoBehaviour
     void OnDestroy() {
         compositeRT?.Release();
         cameraRT?.Release();
+        defaultRT?.Release();
         slots = null;
         
         //cleanup target texture
@@ -177,4 +194,15 @@ public class Composite : MonoBehaviour
     }
     
     public float CaptureSize => captureSize;
+
+    public RenderTexture[] GetCapturedTextures()
+    {
+        var filled = new System.Collections.Generic.List<RenderTexture>();
+        foreach (var slot in slots)
+        {
+            var frame = slot.RepresentativeFrame;
+            if (frame != null) filled.Add(frame);
+        }
+        return filled.ToArray();
+    }
 }

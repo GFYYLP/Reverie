@@ -20,11 +20,11 @@ RenderSettings:
   m_FogDensity: 0.01
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
+  m_AmbientSkyColor: {r: 1, g: 1, b: 1, a: 1}
   m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
   m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
   m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10306, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
@@ -32,7 +32,7 @@ RenderSettings:
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
   m_SpotCookie: {fileID: 10001, guid: 0000000000000000e000000000000000, type: 0}
-  m_DefaultReflectionMode: 0
+  m_DefaultReflectionMode: 1
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
   m_ReflectionIntensity: 1
@@ -302,7 +302,7 @@ MonoBehaviour:
   moveSpeed: 5
   jumpForce: 20
   gravity: 20
-  warpPos: 600
+  warpPos: 2000
   mouseSensitivity: 1.5
   maxPitch: 89
   bobFrequency: 10
@@ -384,7 +384,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38268343, z: -0, w: 0.92387956}
   m_LocalPosition: {x: 20.39, y: 1.5, z: -6.31}
-  m_LocalScale: {x: 0.1, y: 1000, z: 7.5}
+  m_LocalScale: {x: 0.1, y: 4000, z: 7.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 449357201}
@@ -1594,6 +1594,7 @@ GameObject:
   m_Component:
   - component: {fileID: 909999516}
   - component: {fileID: 909999515}
+  - component: {fileID: 909999517}
   m_Layer: 0
   m_Name: Room Manager
   m_TagString: Untagged
@@ -1630,6 +1631,7 @@ MonoBehaviour:
   booth: {fileID: 1804870229}
   player: {fileID: 191975847}
   doorOffset: 0
+  skyboxManager: {fileID: 909999517}
   dynamicRegen: 0
 --- !u!4 &909999516
 Transform:
@@ -1647,6 +1649,24 @@ Transform:
   - {fileID: 1106502040}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &909999517
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 909999514}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29668b0822c0cd74cb03270d4d7955a5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  skyboxMaterial: {fileID: 2100000, guid: aca48b56ede6bca4e9c3d21c33ee2439, type: 2}
+  composite: {fileID: 571701459}
+  sliceCount: 100
+  scrollSpeedMin: 0.01
+  scrollSpeedMax: 0.08
+  fadeInDuration: 2
 --- !u!1 &1103176196
 GameObject:
   m_ObjectHideFlags: 0
@@ -1746,7 +1766,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 9536995df7aa1964080c0c27a35d5c86, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2581,7 +2601,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9536995df7aa1964080c0c27a35d5c86, type: 2}
+  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2724,7 +2744,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0.38268343, z: -0, w: 0.92387956}
   m_LocalPosition: {x: 20.39, y: 1.5, z: -6.31}
-  m_LocalScale: {x: 0.1, y: 1000, z: 7.5}
+  m_LocalScale: {x: 0.1, y: 4000, z: 7.5}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 339864788}

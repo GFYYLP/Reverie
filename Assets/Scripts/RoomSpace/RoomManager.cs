@@ -13,6 +13,7 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private Movement player;
 
     [SerializeField] private float doorOffset;
+    [SerializeField] private SkyManager skyboxManager;
     [SerializeField] private bool dynamicRegen = false;
     private MeshRenderer currentMesh;
 
@@ -76,6 +77,7 @@ public class RoomManager : MonoBehaviour
             : 0f;
 
         player.Warp(warpPos, inwardYaw);
+        skyboxManager?.OnRoomAdvance();
     }
     
 
