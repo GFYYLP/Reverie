@@ -15,10 +15,10 @@ public class Emotion : MonoBehaviour
 
     public void UpdateState(float contentValue, float uneaseValue, float aweValue, float intensityValue)
     {
-        content += contentValue* 10f;
-        unease += uneaseValue* 10f;
-        awe += aweValue* 10f;
-        intensity += intensityValue * 10f; 
+        content = Mathf.Clamp(content + contentValue * 10f, 0f, 100f);
+        unease = Mathf.Clamp(unease + uneaseValue * 1f, 0f, 100f);
+        awe = Mathf.Clamp(awe + aweValue * 10f, 0f, 100f);
+        intensity = Mathf.Clamp(intensity + intensityValue * 10f, 0f, 100f);
     }
     
     private void Awake()

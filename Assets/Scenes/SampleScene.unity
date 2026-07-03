@@ -1478,6 +1478,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   roomRenderer: {fileID: 1383670676}
+  outlineMaterial: {fileID: 2100000, guid: 6d478ad1616615449a8445b04d95a56a, type: 2}
   contrastVal: 100
 --- !u!1 &898973136
 GameObject:

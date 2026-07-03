@@ -16,6 +16,7 @@ public class SkyManager : MonoBehaviour
     private float[] scrollOffsets;
     private float[] opacity;
     private float[] targetOpacity;
+    private float[] effectiveScrollOffsets;
 
     void Awake()
     {
@@ -23,6 +24,7 @@ public class SkyManager : MonoBehaviour
         scrollOffsets = new float[sliceCount];
         opacity       = new float[sliceCount];
         targetOpacity = new float[sliceCount];
+        effectiveScrollOffsets = new float[sliceCount];
 
         for (int i = 0; i < sliceCount; i++)
         {
@@ -52,6 +54,34 @@ public class SkyManager : MonoBehaviour
             }
         }
         if (dirty) skyboxMaterial.SetFloatArray("_Opacity", opacity);
+
+        UpdateEmotionParameters();
+    }
+
+    void UpdateEmotionParameters()
+    {
+        if (Emotion.Instance == null) return;
+
+        float content = Emotion.Instance.content * 0.01f;
+        float unease  = Emotion.Instance.unease  * 0.01f;
+        float awe     = Emotion.Instance.awe     * 0.01f;
+
+        //awe: exaggerates the dome into a vast, swirling vault
+        skyboxMaterial.SetFloat("_ElevScale", Mathf.Lerp(1f, 2.4f, awe));
+        skyboxMaterial.SetFloat("_Swirl", awe * 1.5f);
+
+        //content: warms the horizon fade
+        Color fadeTint = Color.Lerp(Color.white, new Color(1f, 0.85f, 0.65f), content);
+        skyboxMaterial.SetColor("_FadeTint", fadeTint);
+        skyboxMaterial.SetFloat("_FadeSpread", Mathf.Lerp(0.15f, 0.4f, content));
+
+        //unease: jitters the slices
+        for (int i = 0; i < sliceCount; i++)
+        {
+            float wobble = (Mathf.PerlinNoise(i * 13.7f, Time.time * 1.5f) - 0.5f) * unease * 0.6f;
+            effectiveScrollOffsets[i] = scrollOffsets[i] + wobble;
+        }
+        skyboxMaterial.SetFloatArray("_ScrollOffsets", effectiveScrollOffsets);
     }
 
     public void OnRoomAdvance()

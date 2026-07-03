@@ -8,9 +8,11 @@ public class VolumeManager : MonoBehaviour
 {
     private Volume volume;
     [SerializeField] private Renderer roomRenderer;
-    [SerializeField] private float contrastVal=100f;
-    
+    [SerializeField] private Material outlineMaterial;
+    [SerializeField] private float contrastVal = 60f;
+
     private float roomHue = 0f;
+    private Color baseOutlineColor = Color.black;
 
     public void SetRoom(RoomConfig config) {
         roomHue = config.roomHue;
@@ -19,76 +21,93 @@ public class VolumeManager : MonoBehaviour
     void Start()
     {
         volume = GetComponent<Volume>();
+        if (outlineMaterial != null) baseOutlineColor = outlineMaterial.GetColor("_OutlineColor");
     }
 
     // Update is called once per frame
     void Update()
     {
-        UpdateVolumeParameters(
-            Emotion.Instance.content*0.01f,
-            Emotion.Instance.unease*0.01f,
-            Emotion.Instance.awe*0.01f
-        );
+        float content = Emotion.Instance.content * 0.01f;
+        float unease = Emotion.Instance.unease * 0.01f;
+        float awe = Emotion.Instance.awe * 0.01f;
+        
+        UpdateVolumeParameters(content, unease, awe);
+        UpdateOutlineParameters(content, unease, awe);
     }
-    
-    void UpdateVolumeParameters(float content, float unease,  float awe) 
+
+    void UpdateVolumeParameters(float content, float unease,  float awe)
     {
-        //emission tinted by room hue
+        //emission tinted by room hue 
         float emitHue = Mathf.Repeat(roomHue - content * 0.05f, 1f);  //content warms
         float emitSat = Mathf.Clamp01(0.5f - unease * 0.3f);        //unease suppresses
-        Color emissionColor = Color.HSVToRGB(emitHue, emitSat, 1f)
-            * Mathf.Max(content, awe) * 0.3f; //awe brightens
+        Color emissionColor = Color.HSVToRGB(emitHue, emitSat, 1f) * content * 0.3f;
         roomRenderer.material.EnableKeyword("_EMISSION");
         roomRenderer.material.SetColor("_EmissionColor", emissionColor);
-        
+
 
         if (volume.profile.TryGet<Bloom>(out var bloom)) {
-            bloom.threshold.value = Mathf.Lerp(1.2f, 0.2f, Mathf.Max(content, awe));
-            bloom.intensity.value = content * 2f + awe * 5f;
+            bloom.threshold.value = Mathf.Lerp(1.2f, 0.2f, content);
+            bloom.intensity.value = content * 2.5f;
+            bloom.scatter.value = Mathf.Lerp(0.4f, 0.9f, content); //wider/softer glow rather than just brighter
         }
-        
+
         //unease drains the world of color
-        //content/awe restore it
+        //content restores it, then keeps climbing past "cozy" into something oversaturated and artificial
         if (volume.profile.TryGet<ColorAdjustments>(out var color)) {
-            color.saturation.value = Mathf.Lerp(-60f, 30f, Mathf.Clamp01(Mathf.Max(content, awe) - unease * 0.8f));
+            color.saturation.value = Mathf.Lerp(-60f, 50f, Mathf.Clamp01(content - unease * 0.8f));
+            
             float hue = Mathf.Repeat(roomHue - content * 0.04f, 1f); //content nudges slightly warmer
-            float sat = Mathf.Clamp01(0.2f + content * 0.2f - unease * 0.15f - awe * 0.1f);
-            float val = Mathf.Clamp01(1f - unease * 0.12f + awe * 0.05f);
+            float sat = Mathf.Clamp01(0.2f + content * 0.2f - unease * 0.15f);
+            float val = Mathf.Clamp01(1f - unease * 0.12f + content * 0.1f);
             color.colorFilter.value = Color.HSVToRGB(hue, sat, val);
-            color.contrast.value = Mathf.Lerp(contrastVal, -contrastVal, unease);
+            
+            color.contrast.value = Mathf.Lerp(0f, contrastVal, unease);
+            color.postExposure.value = content * 0.35f; 
         }
-        
-        // if (volume.profile.TryGet<Vignette>(out var vignette)) {
-        //     vignette.intensity.value = Mathf.Lerp(0.1f, 0.55f, unease);
-        //     vignette.color.value = Color.Lerp(
-        //         new Color(0.05f, 0.05f, 0.05f), // near-black neutral
-        //         new Color(0.0f, 0.03f, 0.06f),  // very subtle cold tint at peak unease
-        //         unease
-        //     );
-        // }
-        
+
+        //fear
+        //highlights turned inside out, flickering
+        if (volume.profile.TryGet<ShadowsMidtonesHighlights>(out var smh)) {
+            float flicker = 1f - Mathf.PerlinNoise(Time.time, 0f) * unease * 0.5f;
+            float highlightScalar = Mathf.Clamp01(1f - unease * flicker);
+            smh.highlights.value = new Vector4(highlightScalar, highlightScalar, highlightScalar, 0f);
+            smh.highlightsEnd.value = Mathf.Lerp(1f, 0.45f, unease);
+        }
+
         //psychological fringing
         if (volume.profile.TryGet<ChromaticAberration>(out var ca)) {
             ca.intensity.value = unease * 0.4f;
         }
-        
-        // // unease = anxiety noise
-        // if (volume.profile.TryGet<FilmGrain>(out var grain)) {
-        //     grain.intensity.value = unease * 0.4f;
-        //     grain.response.value = 0.8f;
-        // }
-        
-        //world slightly loses focus at edges with awe
-        if (volume.profile.TryGet<DepthOfField>(out var dof)) {
-            dof.gaussianStart.value = Mathf.Lerp(8f, 2f, awe);
-            dof.gaussianEnd.value   = Mathf.Lerp(20f, 6f, awe);
-            dof.gaussianMaxRadius.value = awe * 1.5f;
+
+        //awe
+        //motion blur, depth of field and lens distortion 
+        if (volume.profile.TryGet<MotionBlur>(out var blur)) {
+            blur.intensity.value = awe * 0.8f;
+            blur.clamp.value = Mathf.Lerp(0.05f, 0.2f, awe);
         }
+        if (volume.profile.TryGet<DepthOfField>(out var dof)) {
+            dof.aperture.value = Mathf.Lerp(16f, 1f, awe);   
+            dof.focalLength.value = Mathf.Lerp(50f, 12f, awe);
+        }
+        if (volume.profile.TryGet<LensDistortion>(out var lens)) {
+            lens.intensity.value = Mathf.Lerp(0f, 0.6f, awe);   
+            lens.scale.value = Mathf.Lerp(1f, 1.15f, awe);  //hides the resulting edge stretching
+        }
+
+        UpdateOutlineParameters(content, unease, awe);
+    }
+
+    void UpdateOutlineParameters(float content, float unease, float awe)
+    {
+        if (outlineMaterial == null) return;
         
-        // //content = subtle barrel (warmth/closeness)
-        // //awe = pincushion (vastness)
-        // if (volume.profile.TryGet<LensDistortion>(out var lens)) {
-        //     lens.intensity.value = Mathf.Lerp(-0.12f, 0.15f, awe) * Mathf.Max(content, awe);
-        // }
+        outlineMaterial.SetFloat("_EdgeSoftness", content);     //content: feather into a glow
+        outlineMaterial.SetFloat("_JitterAmount", unease * 6f);  //unease: tremble
+        outlineMaterial.SetFloat("_WarpAmount", awe);             //awe: billow
+        outlineMaterial.SetFloat("_WarpFrequency", Mathf.Lerp(0.4f, 1.5f, awe));
+
+        Color outlineColor = baseOutlineColor;
+        outlineColor.a = Mathf.Lerp(baseOutlineColor.a, 0.3f, content); //never fully vanishes
+        outlineMaterial.SetColor("_OutlineColor", outlineColor);
     }
 }
