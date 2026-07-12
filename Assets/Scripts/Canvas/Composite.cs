@@ -10,6 +10,12 @@ public class Composite : MonoBehaviour
     [SerializeField] private Material decalBaseMaterial; // URP/Decal material as template
     [SerializeField] private int slotCount = 25;
     [SerializeField] private int canvasSize = 256;
+
+    [Header("Pages")]
+    [SerializeField] private RectTransform leftPage;
+    [SerializeField] private RectTransform rightPage;
+    [SerializeField] private UnityEngine.UI.RawImage referenceDisplay;
+    [SerializeField, Range(0f, 1f)] private float referenceAlpha = 0.2f;
     
     [SerializeField, Range(0.1f, 1f)] private float captureSize = 0.4f;
     [SerializeField] private float shiftTick = 4f;
@@ -39,7 +45,7 @@ public class Composite : MonoBehaviour
             RenderTextureFormat.ARGB32);
         
         
-        // shared default white RT — all empty slots reference this
+        // shared default white RT
         defaultRT = new RenderTexture(2, 2, 0, RenderTextureFormat.ARGB32);
         defaultRT.wrapMode = TextureWrapMode.Repeat;
         RenderTexture prev = RenderTexture.active;
@@ -49,10 +55,11 @@ public class Composite : MonoBehaviour
 
         slots = new Snapshot[slotCount];
         for (int i = 0; i < slotCount; i++) {
-            GameObject obj = Instantiate(slotPrefab, transform);
+            GameObject obj = Instantiate(slotPrefab, leftPage != null ? leftPage : transform);
             Snapshot snap = obj.GetComponent<Snapshot>();
             if (snap == null) { Debug.LogError($"Slot {i} prefab missing Snapshot component"); continue; }
             snap.Init(decalBaseMaterial);
+            snap.page = leftPage != null ? leftPage : transform as RectTransform;
             slots[i] = snap;
         }
     }
@@ -182,6 +189,13 @@ public class Composite : MonoBehaviour
     //         currentSlot = (currentSlot + 1) % slots.Length;
     //     }
     // }
+
+    public void SetReference(Texture reference)
+    {
+        if (referenceDisplay == null) return;
+        referenceDisplay.texture = reference;
+        referenceDisplay.color   = new Color(1, 1, 1, referenceAlpha);
+    }
 
     void OnDestroy() {
         compositeRT?.Release();

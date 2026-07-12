@@ -54,6 +54,10 @@ public class RoomSpace : MonoBehaviour
         sdfShader.SetFloat( "densityScore",      config.densityScore);
         sdfShader.SetFloat( "fragmentationScore",config.fragmentationScore);
         sdfShader.SetFloat( "radialScore",       config.radialScore);
+        // sdfShader.SetFloat("cohesionScore", config.cohesionScore);
+        // sdfShader.SetFloat("uneaseGate", config.uneaseGate);
+        // sdfShader.SetFloat("dominanceScore", config.dominanceScore);
+        // sdfShader.SetFloat("rhythmScore", config.rhythmScore);
         
         int threads = Mathf.CeilToInt(GridSize / 8f);
         sdfShader.Dispatch(kernel, threads, threads, threads);

@@ -1,10 +1,9 @@
 #pragma kernel CSMain
-// #include "SDFPrimitive.compute"
 
 RWStructuredBuffer<float4> densityValues;
 int gridSize;
 float roomScale;
-float seed; 
+float seed; // per-room randomization seed
 
 // grammar scores from emotion pipeline
 float spikeScore;
@@ -14,50 +13,49 @@ float densityScore;
 float fragmentationScore;
 float radialScore;
 
-
 //sdf primitives
-static float sdBox(float3 p, float3 b) {
+float sdBox(float3 p, float3 b) {
     float3 q = abs(p) - b;
     return length(max(q, 0.0)) + min(max(q.x, max(q.y, q.z)), 0.0);
 }
-static float sdCapsule(float3 p, float3 a, float3 b, float r) {
+float sdCapsule(float3 p, float3 a, float3 b, float r) {
     float3 ab = b - a, ap = p - a;
     float t = clamp(dot(ap, ab) / dot(ab, ab), 0.0, 1.0);
     return length(ap - t * ab) - r;
 }
-static float sdTorus(float3 p, float R, float r) {
+float sdTorus(float3 p, float R, float r) {
     float2 q = float2(length(p.xz) - R, p.y);
     return length(q) - r;
 }
-static float sdOctahedron(float3 p, float s) {
+float sdOctahedron(float3 p, float s) {
     p = abs(p);
     return (p.x + p.y + p.z - s) * 0.57735027;
 }
-static float sdCylinder(float3 p, float h, float r) {
+float sdCylinder(float3 p, float h, float r) {
     float2 d = abs(float2(length(p.xz), p.y)) - float2(r, h);
     return min(max(d.x, d.y), 0.0) + length(max(d, 0.0));
 }
-static float sdCone(float3 p, float angle, float height) {
+float sdCone(float3 p, float angle, float height) {
     float2 q   = float2(length(p.xz), p.y);
     float2 tip = float2(sin(angle), cos(angle));
     float  dt  = dot(q, tip);
     return length(q - tip * clamp(dt, 0.0, height));
 }
 
-//sdf combinators
-static float sdfUnion(float a, float b) { return min(a, b); }
-static float sdfSmoothUnion(float a, float b, float k) {
+//SDF combinators
+float sdfUnion(float a, float b) { return min(a, b); }
+float sdfSmoothUnion(float a, float b, float k) {
     float h = clamp(0.5 + 0.5 * (b - a) / k, 0.0, 1.0);
     return lerp(b, a, h) - k * h * (1.0 - h);
 }
-static float sdfIntersection(float a, float b) { return max(a, b); }
-static float sdfDifference(float a, float b)   { return max(a, -b); }
-
-static const float TWO_PI = 6.28318f;
+float sdfIntersection(float a, float b) { return max(a, b); }
+float sdfDifference(float a, float b)   { return max(a, -b); }
+// Rotate around Y-axis — used to tilt objects off-axis
 float3x3 rotY(float a) {
     float s = sin(a), c = cos(a);
     return float3x3(c, 0, s,  0, 1, 0,  -s, 0, c);
 }
+// Rotate around Z-axis — used to lean objects sideways
 float3x3 rotZ(float a) {
     float s = sin(a), c = cos(a);
     return float3x3(c, -s, 0,  s, c, 0,  0, 0, 1);
@@ -102,18 +100,25 @@ float fbm(float3 p) {
 //object layout
 float3 objectPosition(int i, int count) {
     float t     = (float)i / max(count - 1, 1);
-    float angle = t * TWO_PI + seed * 0.017; // seed rotates the ring each room
-    
-    float3 radial   = float3(cos(angle), 0.0, sin(angle)) * 0.55; //spread outward in a ring along the XZ plane 
-    float3 vertical = float3(0.0, lerp(-0.5, 0.5, t), 0.0); //ladder-like stacking
+    float angle = t * 6.28318 + seed * 0.017; // seed rotates the ring each room
+
+    float3 radial   = float3(cos(angle), 0.0, sin(angle)) * 0.55;
+    float3 vertical = float3(0.0, lerp(-0.5, 0.5, t), 0.0);
+
+    int    gridW = (int)ceil(sqrt((float)count));
+    float3 grid  = float3(
+        (float)(i % gridW) / max(gridW - 1, 1) - 0.45,
+        0.0,
+        (float)(i / gridW) / max(gridW - 1, 1) - 0.45
+    );
 
     float3 pos = lerp(radial, vertical, verticalityScore);
+    pos = lerp(pos, grid, 1.0 - radialScore);
 
-    //add scattered chaos
-    float3 seedVec  = float3(seed + i * 3.7, seed + i * 7.1, seed + i * 11.3);  //multiply by prime float to maximize randomness
+    float3 seedVec  = float3(seed + i * 3.7, seed + i * 7.1, seed + i * 11.3);
     float3 variance = (hash3(seedVec) * 2.0 - 1.0) * lerp(0.0, 0.25, fragmentationScore);
-    
-    //clamp to near border
+
+    // clamp center so shape radius (max ~0.28) stays inside 0.95 wall regardless of roomScale
     float3 raw = clamp(pos + variance, -0.85, 0.85);
     return raw * roomScale;
 }
@@ -126,95 +131,97 @@ float objectSDF(float3 p, int idx, float scale) {
     bool isMonolithic = (verticalityScore > 0.65 && spikeScore < 0.35);
     bool isAggressive = (spikeScore > 0.55);
     bool isBaroque    = (symmetryScore > 0.65 && fragmentationScore > 0.35);
+    // fallback: organic/soft (capsules, toruses, low noise)
+
     
-    
-    //per-object rotation
+    //per-object tilt
     float tiltAmount;
     if (isMonolithic) {  //stays upright
         tiltAmount = 0.0;
-    } else if (isAggressive) {  //wild lean driven by fbm
+    } else if (isAggressive) {  //wild lean driven by fbm.
+        // chaotic lean: different per object, large angle
         float uneaseProxy = clamp(spikeScore * 0.5 + fragmentationScore * 0.5, 0.0, 1.0);
-        tiltAmount = (hv.z * 2.0 - 1.0) * uneaseProxy * 1.1;
+        tiltAmount = (hv.z * 2.0 - 1.0) * uneaseProxy * 1.1; // up to ~63 degrees
     } else {  //gentle sway from a smooth hash
-        tiltAmount = (hv.z * 2.0 - 1.0) * 0.2; 
+        tiltAmount = (hv.z * 2.0 - 1.0) * 0.22; // gentle ±~12 degrees
     }
 
-    float yaw  = hv.y * 6.28318; //random facing per object
-    float3 localPos  = mul(rotZ(tiltAmount), mul(rotY(yaw), p));
+    float yaw  = hv.y * 6.28318; // random facing per object
+    float3 lp  = mul(rotZ(tiltAmount), mul(rotY(yaw), p));
 
     
     //archetype-driven parameters
-    float height=0.0;
-    float width=0.0;
+    float h, r;
     if (isMonolithic) {
-        height = scale * lerp(2.2, 3.5, verticalityScore); //tall and heavy
-        width = scale * lerp(0.28, 0.38, 1.0 - spikeScore);
+        h = scale * lerp(2.2, 3.5, verticalityScore); // tall and heavy
+        r = scale * lerp(0.28, 0.38, 1.0 - spikeScore);
     } else if (isAggressive) {
-        height = scale * lerp(1.2, 2.8, verticalityScore);
-        width = scale * 0.22; //spires
+        h = scale * lerp(1.2, 2.8, verticalityScore);
+        r = scale * 0.22; // narrow — spires, not columns
     } else if (isBaroque) {
-        height = scale * lerp(0.8, 1.8, verticalityScore);
-        width = scale * lerp(0.3, 0.5, symmetryScore); //wider, decorative
+        h = scale * lerp(0.8, 1.8, verticalityScore);
+        r = scale * lerp(0.3, 0.5, symmetryScore); // wider, decorative
     } else {
-        height = scale * lerp(0.55, 1.6, verticalityScore);
-        width = scale * 0.3;
+        h = scale * lerp(0.55, 1.6, verticalityScore);
+        r = scale * 0.3;
     }
 
     
     //base shape selection
     float roll = frac(hv.x + spikeScore * 0.45 - verticalityScore * 0.1);
-    float dist=0.0;
+    float d;
     if (isMonolithic) {
-        dist = sdCylinder(localPos, height * 0.5, width * 0.75);
+        // Always cylinder: weight and permanence
+        d = sdCylinder(lp, h * 0.5, r * 0.75);
 
-        //blend 2 structural boxes with cylinder (pedestal at base, capital at top)
-        float3 baseP = localPos + float3(0, height * 0.55, 0);
-        float3 capP  = localPos - float3(0, height * 0.55, 0);
-        float  tw    = width * 1.6; // trim width
+        // Architectural trim: pedestal at base, capital at top
+        float3 baseP = lp + float3(0, h * 0.55, 0);
+        float3 capP  = lp - float3(0, h * 0.55, 0);
+        float  tw    = r * 1.6; // trim width
         float  th    = scale * 0.07;
         float pedestal = sdBox(baseP, float3(tw, th, tw));
         float capital  = sdBox(capP,  float3(tw, th, tw));
-        dist = sdfSmoothUnion(dist, pedestal, 0.04);
-        dist = sdfSmoothUnion(dist, capital,  0.04);
+        d = sdfSmoothUnion(d, pedestal, 0.04);
+        d = sdfSmoothUnion(d, capital,  0.04);
 
     } else if (isAggressive) {
-        //cone-spiked octahedron
-        float3 stretched = localPos * float3(1.0, lerp(1.0, 2.4, verticalityScore), 1.0);
-        dist = sdOctahedron(stretched, scale * 0.85);
-        float cone = sdCone(localPos, lerp(0.18, 0.55, spikeScore), scale * 2.2);
+        // Cone-spiked octahedron: sharp, unstable
+        float3 stretched = lp * float3(1.0, lerp(1.0, 2.4, verticalityScore), 1.0);
+        d = sdOctahedron(stretched, scale * 0.85);
+        float cone = sdCone(lp, lerp(0.18, 0.55, spikeScore), scale * 2.2);
         float k    = lerp(0.3, 0.03, spikeScore);
-        dist = sdfSmoothUnion(dist, cone, k);
+        d = sdfSmoothUnion(d, cone, k);
 
         // CSG lattice subtraction: carves crystalline voids into the mass
-        float3 cutP = frac(localPos * (3.5 + spikeScore * 2.0)) - 0.5;
+        float3 cutP = frac(lp * (3.5 + spikeScore * 2.0)) - 0.5;
         float  lattice = sdOctahedron(cutP, 0.3);
-        dist = sdfDifference(dist, lattice);
+        d = sdfDifference(d, lattice);
 
     } else if (isBaroque) {
-        // Torus + octahedron intersection: ornate, filigree-like
+        // Torus + octahedron intersection — ornate, filigree-like
         float R = scale * lerp(0.4, 0.65, hv.y);
-        float dTorus = sdTorus(localPos, R, scale * 0.18);
-        float3 sym   = localPos * float3(1.0, lerp(1.0, 1.8, verticalityScore), 1.0);
+        float dTorus = sdTorus(lp, R, scale * 0.18);
+        float3 sym   = lp * float3(1.0, lerp(1.0, 1.8, verticalityScore), 1.0);
         float dOcta  = sdOctahedron(sym, scale * 0.95);
 
         // Intersection only when symmetry is strong enough not to hollow to nothing
         if (symmetryScore > 0.80) {
-            dist = sdfIntersection(dTorus, dOcta); // crystalline filigree
+            d = sdfIntersection(dTorus, dOcta); // crystalline filigree
         } else {
-            dist = sdfSmoothUnion(dTorus, dOcta, 0.08 * scale);
+            d = sdfSmoothUnion(dTorus, dOcta, 0.08 * scale);
         }
 
     } else {
         //organic: capsule or torus, warm and body-like
         if (roll < 0.55) {
-            dist = sdCapsule(localPos, float3(0, -height * 0.5, 0), float3(0, height * 0.5, 0), width);
+            d = sdCapsule(lp, float3(0, -h * 0.5, 0), float3(0, h * 0.5, 0), r);
         } else {
             float R = scale * lerp(0.45, 0.7, hv.y);
-            dist = sdTorus(localPos, R, scale * 0.18);
+            d = sdTorus(lp, R, scale * 0.18);
         }
     }
 
-    return dist;
+    return d;
 }
 
 //scene
@@ -222,55 +229,59 @@ float sceneSDF(float3 p) {
     int   count      = (int)round(lerp(4, 16, densityScore));
     float uneaseProxy = clamp(spikeScore * 0.5 + fragmentationScore * 0.5, 0.0, 1.0);
 
-    //room walls
-    float dist = -sdBox(p, float3(1.0, 1.0, 1.0) * roomScale * 1.25);
+    //room walls: evaluated on clean p so geometry stays closed
+    float d = -sdBox(p, float3(1.0, 1.0, 1.0) * roomScale * 1.25);
 
     for (int i = 0; i < count; i++) {
         float3 origin = objectPosition(i, count);
-        float3 localPos = p - origin;
+        float3 localP = p - origin;
 
         //high unease warps local space around each object
         float  warpAmt = uneaseProxy * 0.28;
         float3 seedOff = float3(seed * 0.013, seed * 0.017, seed * 0.011);
-        float3 worldPos = localPos + warpAmt * float3(
-            fbm(localPos * 1.8 + seedOff),
-            fbm(localPos * 1.8 + seedOff + 1.7),
-            fbm(localPos * 1.8 + seedOff + 3.4)
+        float3 wp      = localP + warpAmt * float3(
+            fbm(localP * 1.8 + seedOff),
+            fbm(localP * 1.8 + seedOff + 1.7),
+            fbm(localP * 1.8 + seedOff + 3.4)
         );
 
-        //randomized scale
+        //shv 
         float3 shv   = hash3(float3(seed + i, seed + i * 1.7, seed + i * 2.9));
-        float  scale = (0.15 + shv.x * 0.13); 
+        float  scale = (0.15 + shv.x * 0.13); // 0.15–0.28 shader-space; surface stays within 0.95 wall
 
-        float obj = objectSDF(worldPos, i, scale);
+        float obj = objectSDF(wp, i, scale);
+
         // surface noise: symmetry suppresses it, unease amplifies
-        obj += noise(localPos * (2.2 / max(roomScale, 0.01)))
+        obj += noise(localP * (2.2 / max(roomScale, 0.01)))
                * (1.0 - symmetryScore) * uneaseProxy * 0.12 * roomScale;
         
-        //bias objects to clump away from boundaries.
-        float3 borderProximity = abs(p) / (roomScale * 1.25); 
-        float boundaryFade = 1.0 - smoothstep(0.55, 0.85, max(borderProximity.x, max(borderProximity.y, borderProximity.z)));
-        obj = lerp(roomScale * 2.0, obj, boundaryFade); // push obj positive near edges
+        // Bias objects to clump away from boundaries.
+        // As p approaches the room edge, objects fade out smoothly.
+        float3 normalized = abs(p) / (roomScale * 1.25); // 0 at center, 1 at wall
+        float boundaryFade = 1.0 - smoothstep(0.55, 0.85, max(normalized.x, max(normalized.y, normalized.z)));
+        obj = lerp(roomScale * 2.0, obj, boundaryFade); // push obj positive (empty) near edges
 
-        dist = sdfUnion(dist, obj);
+        d = sdfUnion(d, obj);
     }
 
-    return dist;
+    return d;
 }
 
+//kernel 
 int indexOf(int x, int y, int z) {
     return x + y * gridSize + z * gridSize * gridSize;
 }
 float3 gridToLocal(int x, int y, int z) {
     return (float3(x, y, z) / (gridSize - 1.0) * 2.0 - 1.0) * roomScale;
 }
+
 [numthreads(8,8,8)]
 void CSMain(uint3 id : SV_DispatchThreadID) {
     if (id.x >= (uint)gridSize ||
         id.y >= (uint)gridSize ||
         id.z >= (uint)gridSize) return;
 
-    float3 p = gridToLocal(id.x, id.y, id.z);
+    float3 p       = gridToLocal(id.x, id.y, id.z);
     float  density = sceneSDF(p);
 
     densityValues[indexOf(id.x, id.y, id.z)] = float4(p, density);

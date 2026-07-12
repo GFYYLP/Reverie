@@ -15,6 +15,8 @@ public class Snapshot : MonoBehaviour,
     RawImage display;  //UI display
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
+
+    [HideInInspector] public RectTransform page; // set by Composite, defines drag bounds
     
     public float snapShotSize = 0.5f;
 
@@ -108,13 +110,24 @@ public class Snapshot : MonoBehaviour,
 
     public void OnDrag(PointerEventData e) {
         if (dragProxy == null) return;
-        // follow cursor in canvas space
+        // move proxy in canvas space
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvas.GetComponent<RectTransform>(),
             e.position, e.pressEventCamera,
             out Vector2 localPos
         );
         dragProxy.GetComponent<RectTransform>().localPosition = localPos;
+
+        // also move this snapshot, clamped within its page
+        if (page != null) {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                page, e.position, e.pressEventCamera, out Vector2 pagePos);
+            Vector2 half     = GetComponent<RectTransform>().sizeDelta * 0.5f;
+            Vector2 pageHalf = page.rect.size * 0.5f;
+            pagePos.x = Mathf.Clamp(pagePos.x, -pageHalf.x + half.x, pageHalf.x - half.x);
+            pagePos.y = Mathf.Clamp(pagePos.y, -pageHalf.y + half.y, pageHalf.y - half.y);
+            GetComponent<RectTransform>().localPosition = pagePos;
+        }
     }
 
     public void OnEndDrag(PointerEventData e) {
