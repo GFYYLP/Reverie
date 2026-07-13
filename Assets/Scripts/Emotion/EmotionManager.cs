@@ -8,7 +8,9 @@ public class EmotionManager : MonoBehaviour
     // [SerializeField] private RenderTexture sourceRT;
     [SerializeField] private ComputeShader grammarShader;
     [SerializeField] private float grammarInterval = 0.5f; // seconds between grammar evaluations
-
+    [SerializeField] private float surrealThreshold = 0.5f; // threshold for surrealism detection
+    [SerializeField] private SurrealSpace surrealSpace;
+    
     [StructLayout(LayoutKind.Sequential)]
     private struct Grammar
     {
@@ -17,8 +19,7 @@ public class EmotionManager : MonoBehaviour
         public float brightness;
         public float edgeDensity;
         public float isolation;
-
-        private Vector3 padding;
+        public Vector3 padding;//surrealFrag;
     }
     private Grammar currGrammar;
     private GraphicsBuffer grammarBuffer;
@@ -66,6 +67,12 @@ public class EmotionManager : MonoBehaviour
         float unease = scores[0].isolation * (1f - scores[0].colorVariance);// * (1f - warmth);
         float awe = scores[0].edgeDensity;// * (1f - scores[0].isolation);              // complex but not empty
         float intensity = Mathf.Max(content, unease, awe);
+        
+        //surreal space detection
+        if (scores[0].edgeDensity > surrealThreshold)
+        {
+            surrealSpace.AdvanceSpace();
+        }
         
         Emotion.Instance.UpdateState(content*0.1f, unease*0.1f, awe*0.1f, intensity*0.1f);
     }

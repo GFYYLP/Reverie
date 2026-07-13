@@ -4,6 +4,7 @@ Shader "Whitespace/DreamscapeLit"
     {
         _FillColor    ("Fill Color",   Color)       = (1, 1, 1, 1)
         _AmbientMin   ("Ambient Min",  Range(0, 1)) = 0.2
+        _SurrealBlend ("Surreal Blend", Range(0, 1)) = 1.0
     }
 
     SubShader
@@ -41,7 +42,12 @@ Shader "Whitespace/DreamscapeLit"
             CBUFFER_START(UnityPerMaterial)
                 float4 _FillColor;
                 float  _AmbientMin;
+                float  _SurrealBlend;
             CBUFFER_END
+
+            TEXTURE2D_X(_SurrealRT);
+            SAMPLER(sampler_SurrealRT);
+            float4 _SurrealRect; // xy = min, zw = max in screen UV space
 
             struct Attributes
             {
@@ -69,32 +75,30 @@ Shader "Whitespace/DreamscapeLit"
             {
                 float3 normalWS = normalize(IN.normalWS);
 
-                // main light 
                 Light mainLight  = GetMainLight();
                 float diffuse    = saturate(dot(normalWS, mainLight.direction));
-
-                // clamp diffuse to ambient floor so no surface goes fully black
                 float lighting   = max(diffuse * mainLight.distanceAttenuation, _AmbientMin);
-
-                // additional lights (additive diffuse only)
-                #ifdef _ADDITIONAL_LIGHTS
-                uint lightCount = GetAdditionalLightsCount();
-                for (uint i = 0u; i < lightCount; i++)
-                {
-                    Light light   = GetAdditionalLight(i, IN.positionWS);
-                    float contrib = saturate(dot(normalWS, light.direction)) * light.distanceAttenuation;
-                    lighting      = saturate(lighting + contrib * 0.5);
-                }
-                #endif
 
                 float3 color = _FillColor.rgb;
 
-                // apply DBuffer decals onto albedo
                 #ifdef _DBUFFER
                 ApplyDecalToBaseColor(IN.positionCS, color);
                 #endif
 
-                return half4(color * lighting, 1);
+                half4 result = half4(color * lighting, 1);
+
+                // surreal overwrite: screen-space rect mask
+                float2 screenUV = IN.positionCS.xy / _ScreenParams.xy;
+                float inRect = step(_SurrealRect.x, screenUV.x) * step(screenUV.x, _SurrealRect.z)
+                             * step(_SurrealRect.y, screenUV.y) * step(screenUV.y, _SurrealRect.w);
+
+                if (inRect > 0)
+                {
+                    half4 surreal = SAMPLE_TEXTURE2D_X(_SurrealRT, sampler_SurrealRT, screenUV);
+                    result = lerp(result, surreal, inRect * _SurrealBlend);
+                }
+
+                return result;
             }
             ENDHLSL
         }

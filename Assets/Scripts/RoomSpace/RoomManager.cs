@@ -14,6 +14,7 @@ public class RoomManager : MonoBehaviour
 
     [SerializeField] private float doorOffset;
     [SerializeField] private SkyManager skyboxManager;
+    [SerializeField] private SurrealSpace surrealSpace;
     [SerializeField] private bool dynamicRegen = false;
     private MeshRenderer currentMesh;
 
@@ -46,6 +47,8 @@ public class RoomManager : MonoBehaviour
         volumeManager.SetRoom(roomConfig);
         currentRoom.Generate(roomConfig);
         currentMesh = currentRoom.GetComponent<MeshRenderer>();
+        
+        surrealSpace.AdvanceSpace();
         
         //determines world-space position of the corners of the generated mesh
         Bounds bounds = currentMesh.bounds;
