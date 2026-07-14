@@ -602,13 +602,13 @@ MonoBehaviour:
   surrealCamera: {fileID: 1931284852}
   renderWidth: 512
   renderHeight: 512
-  skyboxRenderer: {fileID: 752902833}
   images:
   - {fileID: 2800000, guid: cbc5c6bfa666eab4290e4acef78d7ab3, type: 3}
   - {fileID: 2800000, guid: bbb5b6a01b0568b46b7e71dcd6a42d7c, type: 3}
   - {fileID: 2800000, guid: eba5818662cf2154c82bbf6ddf360d9c, type: 3}
   - {fileID: 2800000, guid: f5790259c91bbd842a12142b38090fc1, type: 3}
   currentImage: 0
+  skyboxMaterial: {fileID: 2100000, guid: 7b9a2b8459e6e6f4a95573aef2e96acd, type: 2}
 --- !u!1 &243765490
 GameObject:
   m_ObjectHideFlags: 0
@@ -1573,7 +1573,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &752902831
 Transform:
   m_ObjectHideFlags: 0
@@ -1740,7 +1740,7 @@ GameObject:
   - component: {fileID: 898973139}
   - component: {fileID: 898973138}
   m_Layer: 0
-  m_Name: Cube (1)
+  m_Name: Right Balcony
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1802,7 +1802,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5d59f68433f606749a4c8d0267fd76a0, type: 2}
+  - {fileID: 2100000, guid: 9536995df7aa1964080c0c27a35d5c86, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2550,7 +2550,7 @@ GameObject:
   - component: {fileID: 1660286720}
   - component: {fileID: 1660286719}
   m_Layer: 0
-  m_Name: Cube
+  m_Name: Left Balcony
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2612,7 +2612,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 5d59f68433f606749a4c8d0267fd76a0, type: 2}
+  - {fileID: 2100000, guid: 9536995df7aa1964080c0c27a35d5c86, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

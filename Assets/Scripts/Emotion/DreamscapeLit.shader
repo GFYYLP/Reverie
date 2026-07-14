@@ -47,7 +47,9 @@ Shader "Whitespace/DreamscapeLit"
 
             TEXTURE2D_X(_SurrealRT);
             SAMPLER(sampler_SurrealRT);
-            float4 _SurrealRect; // xy = min, zw = max in screen UV space
+            float4 _SurrealGateDir;
+            float  _SurrealGateMin;
+            float  _SurrealGateMax;
 
             struct Attributes
             {
@@ -87,15 +89,16 @@ Shader "Whitespace/DreamscapeLit"
 
                 half4 result = half4(color * lighting, 1);
 
-                // surreal overwrite: screen-space rect mask
-                float2 screenUV = IN.positionCS.xy / _ScreenParams.xy;
-                float inRect = step(_SurrealRect.x, screenUV.x) * step(screenUV.x, _SurrealRect.z)
-                             * step(_SurrealRect.y, screenUV.y) * step(screenUV.y, _SurrealRect.w);
+                // surreal overwrite: normal-gated, uses world-space normal alignment
+                float3 gateDir  = normalize(_SurrealGateDir.xyz);
+                float  align    = dot(normalWS, gateDir);
+                float  gate     = smoothstep(_SurrealGateMin, _SurrealGateMax, align);
 
-                if (inRect > 0)
+                if (gate > 0)
                 {
-                    half4 surreal = SAMPLE_TEXTURE2D_X(_SurrealRT, sampler_SurrealRT, screenUV);
-                    result = lerp(result, surreal, inRect * _SurrealBlend);
+                    float2 screenUV = IN.positionCS.xy / _ScreenParams.xy;
+                    half4 surreal   = SAMPLE_TEXTURE2D_X(_SurrealRT, sampler_SurrealRT, screenUV);
+                    result = lerp(result, surreal, gate * _SurrealBlend);
                 }
 
                 return result;
