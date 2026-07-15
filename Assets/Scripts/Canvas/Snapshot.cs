@@ -16,7 +16,9 @@ public class Snapshot : MonoBehaviour,
     GameObject dragProxy; // floating copy while dragging
     Canvas canvas;
 
-    [HideInInspector] public RectTransform page; // set by Composite, defines drag bounds
+    [HideInInspector] public RectTransform page;      // contact strip page (drag source)
+    [HideInInspector] public RectTransform rightPage;  // replication page (drop target)
+    [HideInInspector] public ShotProjector shotProjector;
     
     public float snapShotSize = 0.5f;
 
@@ -110,50 +112,42 @@ public class Snapshot : MonoBehaviour,
 
     public void OnDrag(PointerEventData e) {
         if (dragProxy == null) return;
-        // move proxy in canvas space
+        // proxy follows cursor freely across the whole canvas
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
             canvas.GetComponent<RectTransform>(),
             e.position, e.pressEventCamera,
             out Vector2 localPos
         );
         dragProxy.GetComponent<RectTransform>().localPosition = localPos;
-
-        // also move this snapshot, clamped within its page
-        if (page != null) {
-            RectTransformUtility.ScreenPointToLocalPointInRectangle(
-                page, e.position, e.pressEventCamera, out Vector2 pagePos);
-            Vector2 half     = GetComponent<RectTransform>().sizeDelta * 0.5f;
-            Vector2 pageHalf = page.rect.size * 0.5f;
-            pagePos.x = Mathf.Clamp(pagePos.x, -pageHalf.x + half.x, pageHalf.x - half.x);
-            pagePos.y = Mathf.Clamp(pagePos.y, -pageHalf.y + half.y, pageHalf.y - half.y);
-            GetComponent<RectTransform>().localPosition = pagePos;
-        }
     }
 
     public void OnEndDrag(PointerEventData e) {
         Destroy(dragProxy);
+
+        // if dropped outside both pages, enter world decal mode
+        bool overLeft  = page      != null && RectTransformUtility.RectangleContainsScreenPoint(page,      e.position, e.pressEventCamera);
+        bool overRight = rightPage != null && RectTransformUtility.RectangleContainsScreenPoint(rightPage, e.position, e.pressEventCamera);
+
+        if (!overLeft && !overRight)
+            shotProjector?.ProjectDecalAtCursor(this, e.position);
+    }
+
+    // called by rightPage's IDropHandler to receive this snapshot
+    public void PlaceOnRightPage(Vector2 screenPos) {
+        transform.SetParent(rightPage);
+        page = rightPage;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            rightPage, screenPos, null, out Vector2 localPos);
+        Vector2 half     = GetComponent<RectTransform>().sizeDelta * 0.5f;
+        Vector2 pageHalf = rightPage.rect.size * 0.5f;
+        localPos.x = Mathf.Clamp(localPos.x, -pageHalf.x + half.x, pageHalf.x - half.x);
+        localPos.y = Mathf.Clamp(localPos.y, -pageHalf.y + half.y, pageHalf.y - half.y);
+        GetComponent<RectTransform>().localPosition = localPos;
     }
 
     public void OnDrop(PointerEventData e) {
-        var source = e.pointerDrag.GetComponent<Snapshot>();
-        if (source == null || source.capturedFrames.Count == 0) return;
-
-        // swap entire frame lists so multi-frame photos transfer completely
-        (source.capturedFrames, capturedFrames) = (capturedFrames, source.capturedFrames);
-
-        source.frameIndex = 0;
-        source.currTimer = 0f;
-        frameIndex = 0;
-        currTimer = 0f;
-
-        RenderTexture srcTex  = source.capturedFrames.Count > 0 ? source.capturedFrames[0] : null;
-        RenderTexture destTex = capturedFrames.Count > 0 ? capturedFrames[0] : null;
-
-        source.display.texture = srcTex;
-        display.texture        = destTex;
-
-        if (srcTex  != null) source.mat.SetTexture("_BaseMap", srcTex);
-        if (destTex != null) mat.SetTexture("_BaseMap", destTex);
+        // right page drop, handled by PlaceOnRightPage called from the page's drop handler
     }
 
     private void OnDestroy()

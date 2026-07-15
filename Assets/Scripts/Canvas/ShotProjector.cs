@@ -31,6 +31,35 @@ public class ShotProjector : MonoBehaviour
         }
     }
     
+    public void ProjectDecalAtCursor(Snapshot snap, Vector2 screenPos)
+    {
+        Camera cam = Camera.main;
+        Ray ray = cam.ScreenPointToRay(screenPos);
+
+        float hitDistance = fallbackDistance;
+        Quaternion rotation = cam.transform.rotation;
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            hitDistance = hit.distance;
+            rotation    = Quaternion.LookRotation(-hit.normal); // project along surface normal
+        }
+
+        float fovRad     = cam.fieldOfView * composite.CaptureSize * Mathf.Deg2Rad;
+        float halfHeight = Mathf.Tan(fovRad * 0.5f);
+        float sideLength = halfHeight * 2f * hitDistance;
+        float depth      = hitDistance + projectionDepth;
+
+        DecalProjector dp = pool[poolIndex % maxDecals];
+        poolIndex++;
+
+        dp.transform.position = cam.transform.position + ray.direction * (hitDistance - projectionDepth);
+        dp.transform.rotation = rotation;
+        dp.size               = new Vector3(sideLength, sideLength, depth);
+        dp.pivot              = Vector3.zero;
+        dp.material           = snap.ActiveMaterial();
+        dp.enabled            = true;
+    }
+
     public void ProjectDecal(Snapshot snap)
     {
         Camera cam = Camera.main;

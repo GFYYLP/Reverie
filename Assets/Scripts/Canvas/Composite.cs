@@ -14,8 +14,6 @@ public class Composite : MonoBehaviour
     [Header("Pages")]
     [SerializeField] private RectTransform leftPage;
     [SerializeField] private RectTransform rightPage;
-    [SerializeField] private UnityEngine.UI.RawImage referenceDisplay;
-    [SerializeField, Range(0f, 1f)] private float referenceAlpha = 0.2f;
     
     [SerializeField, Range(0.1f, 1f)] private float captureSize = 0.4f;
     [SerializeField] private float shiftTick = 4f;
@@ -59,7 +57,9 @@ public class Composite : MonoBehaviour
             Snapshot snap = obj.GetComponent<Snapshot>();
             if (snap == null) { Debug.LogError($"Slot {i} prefab missing Snapshot component"); continue; }
             snap.Init(decalBaseMaterial);
-            snap.page = leftPage != null ? leftPage : transform as RectTransform;
+            snap.page         = leftPage  != null ? leftPage  : transform as RectTransform;
+            snap.rightPage    = rightPage != null ? rightPage : transform as RectTransform;
+            snap.shotProjector = shotProjector;
             slots[i] = snap;
         }
     }
@@ -154,7 +154,7 @@ public class Composite : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space))//timer > shiftTick)
         {
             timer -= shiftTick;
-            parseScreenGrammar();
+            //parseScreenGrammar();
         }
     }
 
@@ -189,14 +189,7 @@ public class Composite : MonoBehaviour
     //         currentSlot = (currentSlot + 1) % slots.Length;
     //     }
     // }
-
-    public void SetReference(Texture reference)
-    {
-        if (referenceDisplay == null) return;
-        referenceDisplay.texture = reference;
-        referenceDisplay.color   = new Color(1, 1, 1, referenceAlpha);
-    }
-
+    
     void OnDestroy() {
         compositeRT?.Release();
         cameraRT?.Release();

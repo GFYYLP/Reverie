@@ -602,6 +602,10 @@ MonoBehaviour:
   surrealCamera: {fileID: 1931284852}
   renderWidth: 512
   renderHeight: 512
+  positionLag: 0.92
+  yawLag: 0.85
+  pitchInfluence: 0.3
+  positionOffset: 2
   images:
   - {fileID: 2800000, guid: cbc5c6bfa666eab4290e4acef78d7ab3, type: 3}
   - {fileID: 2800000, guid: bbb5b6a01b0568b46b7e71dcd6a42d7c, type: 3}
@@ -609,6 +613,9 @@ MonoBehaviour:
   - {fileID: 2800000, guid: f5790259c91bbd842a12142b38090fc1, type: 3}
   currentImage: 0
   skyboxMaterial: {fileID: 2100000, guid: 7b9a2b8459e6e6f4a95573aef2e96acd, type: 2}
+  gateDir: {x: 0, y: 1, z: 0}
+  gateMin: 0.4
+  gateMax: 1
 --- !u!1 &243765490
 GameObject:
   m_ObjectHideFlags: 0
@@ -709,7 +716,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   grammarShader: {fileID: 7200000, guid: d622aeda75d22de4a87b3c7171526e61, type: 3}
   grammarInterval: 0.5
-  surrealThreshold: 0.5
+  surrealThreshold: 0.3
   surrealSpace: {fileID: 234573302}
 --- !u!4 &249626270
 Transform:
