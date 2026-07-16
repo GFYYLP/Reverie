@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Collage : MonoBehaviour
 {
-    private CanvasManager canvasManager;
+    private Photographic _photographic;
     
     [SerializeField] private Vector3 openPosition = Vector3.one;
     [SerializeField] private Vector3 closePosition = Vector3.zero;
@@ -14,7 +14,7 @@ public class Collage : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        canvasManager = GetComponentInParent<CanvasManager>();
+        _photographic = GetComponentInParent<Photographic>();
         isOpen = false;
     }
 
@@ -33,7 +33,7 @@ public class Collage : MonoBehaviour
             }
         }
 
-        if (canvasManager.inCamera && isOpen)
+        if (_photographic.inCamera && isOpen)
         {
             StartCoroutine(CloseBook());
         }

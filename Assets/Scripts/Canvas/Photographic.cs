@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CanvasManager : MonoBehaviour
+public class Photographic : MonoBehaviour
 {
     [SerializeField] private RectTransform topVignette;
     [SerializeField] private RectTransform bottomVignette;
@@ -21,7 +21,7 @@ public class CanvasManager : MonoBehaviour
     private float vignetteDuration = 0.2f;
     private bool vignetteAnimationFinished=false;
     
-    private Composite composite;
+    private RTParser rtParser;
     [HideInInspector] public bool inCamera = false;
     //private float captureRegionSize=0;
     private float targetHeight = 0;
@@ -35,7 +35,7 @@ public class CanvasManager : MonoBehaviour
 
     void Awake()
     {
-        composite = FindObjectOfType<Composite>();
+        rtParser = FindObjectOfType<RTParser>();
         topVignetteColor =  topVignette.GetComponent<UnityEngine.UI.Image>().color;
         bottomVignetteColor =  bottomVignette.GetComponent<UnityEngine.UI.Image>().color;
         leftVignetteColor =  leftVignette.GetComponent<UnityEngine.UI.Image>().color;
@@ -63,7 +63,7 @@ public class CanvasManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        float captureRegionSize = composite.CaptureSize * Mathf.Min(Screen.width, Screen.height);
+        float captureRegionSize = rtParser.CaptureSize * Mathf.Min(Screen.width, Screen.height);
         targetHeight = (Screen.height - captureRegionSize) * 0.5f;
         targetWidth  = (Screen.width  - captureRegionSize) * 0.5f;
         

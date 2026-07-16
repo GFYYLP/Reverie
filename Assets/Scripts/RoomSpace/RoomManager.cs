@@ -10,7 +10,7 @@ public class RoomManager : MonoBehaviour
     [SerializeField] private Door doorEnter;
     [SerializeField] private Door doorExit;
     [SerializeField] private Transform booth;
-    [SerializeField] private Movement player;
+    [SerializeField] private CameraMovement player;
 
     [SerializeField] private float doorOffset;
     [SerializeField] private SkyManager skyboxManager;

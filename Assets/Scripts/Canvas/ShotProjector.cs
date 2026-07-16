@@ -11,11 +11,11 @@ public class ShotProjector : MonoBehaviour
     
     private DecalProjector[] pool;
     private int poolIndex = 0;
-    private Composite composite;
+    private RTParser rtParser;
 
     void Awake()
     {
-        composite = GetComponent<Composite>();
+        rtParser = GetComponent<RTParser>();
 
         pool = new DecalProjector[maxDecals];
         for (int i = 0; i < maxDecals; i++)
@@ -44,7 +44,7 @@ public class ShotProjector : MonoBehaviour
             rotation    = Quaternion.LookRotation(-hit.normal); // project along surface normal
         }
 
-        float fovRad     = cam.fieldOfView * composite.CaptureSize * Mathf.Deg2Rad;
+        float fovRad     = cam.fieldOfView * rtParser.CaptureSize * Mathf.Deg2Rad;
         float halfHeight = Mathf.Tan(fovRad * 0.5f);
         float sideLength = halfHeight * 2f * hitDistance;
         float depth      = hitDistance + projectionDepth;
@@ -69,7 +69,7 @@ public class ShotProjector : MonoBehaviour
         if (Physics.Raycast(cam.transform.position, cam.transform.forward, out RaycastHit hit))
             hitDistance = hit.distance;
 
-        float fovRad     = cam.fieldOfView * composite.CaptureSize * Mathf.Deg2Rad;
+        float fovRad     = cam.fieldOfView * rtParser.CaptureSize * Mathf.Deg2Rad;
         float halfHeight = Mathf.Tan(fovRad * 0.5f);
         float sideLength = halfHeight * 2f * hitDistance; // scale by distance: orthographic box must match the perspective frustum at the hit point
 

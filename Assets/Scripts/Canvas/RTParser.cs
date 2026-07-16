@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Composite : MonoBehaviour
+public class RTParser : MonoBehaviour
 {
     // [SerializeField] private Camera cam;
     [SerializeField] private GameObject slotPrefab;
@@ -19,7 +19,7 @@ public class Composite : MonoBehaviour
     [SerializeField] private float shiftTick = 4f;
     
     private EmotionManager emotionManager;
-    private CanvasManager canvasManager;
+    private Photographic _photographic;
     private Snapshot[] slots;
     private ShotProjector shotProjector;
     private RenderTexture cameraRT;
@@ -32,7 +32,7 @@ public class Composite : MonoBehaviour
 
     void Awake()
     {
-        canvasManager = GetComponentInParent<CanvasManager>();
+        _photographic = GetComponentInParent<Photographic>();
         shotProjector =  GetComponent<ShotProjector>();
         
         emotionManager =  FindFirstObjectByType<EmotionManager>();
@@ -72,8 +72,8 @@ public class Composite : MonoBehaviour
 
     private void OnEnable()
     {
-        canvasManager.onSnapshot += TakeShot;
-        canvasManager.onProject += DoProjection;
+        _photographic.onSnapshot += TakeShot;
+        _photographic.onProject += DoProjection;
     }
 
     private float currTimer = 0f;

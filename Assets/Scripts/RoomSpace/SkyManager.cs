@@ -1,9 +1,10 @@
 using UnityEngine;
+using UnityEngine.Serialization;
 
 public class SkyManager : MonoBehaviour
 {
     [SerializeField] private Material skyboxMaterial;
-    [SerializeField] private Composite composite;
+    [FormerlySerializedAs("composite")] [SerializeField] private RTParser rtParser;
     [SerializeField] private int sliceCount = 8;
     [SerializeField] private float scrollSpeedMin = 0.02f;
     [SerializeField] private float scrollSpeedMax = 0.08f;
@@ -86,7 +87,7 @@ public class SkyManager : MonoBehaviour
 
     public void OnRoomAdvance()
     {
-        var available = composite.GetCapturedTextures();
+        var available = rtParser.GetCapturedTextures();
         if (available == null || available.Length == 0) return;
 
         //derive format and size from the actual snapshot RT on first call

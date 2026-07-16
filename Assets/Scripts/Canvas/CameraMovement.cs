@@ -1,7 +1,7 @@
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
-public class Movement : MonoBehaviour {
+public class CameraMovement : MonoBehaviour {
     [Header("Movement")]
     [SerializeField] private float moveSpeed    = 5f;
     [SerializeField] private float jumpForce    = 5f;
