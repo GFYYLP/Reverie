@@ -8,8 +8,10 @@ public class Collage : MonoBehaviour
     
     [SerializeField] private Vector3 openPosition = Vector3.one;
     [SerializeField] private Vector3 closePosition = Vector3.zero;
-    
+    [SerializeField] private Vector3 decalPosition = Vector3.zero; // partially offscreen, still draggable back
+
     private bool isOpen = false;
+    private Coroutine slideRoutine;
     
     // Start is called before the first frame update
     void Start()
@@ -64,8 +66,32 @@ public class Collage : MonoBehaviour
             t += Time.deltaTime / animateDuration ;
 
             transform.position = Vector3.Lerp(transform.position, closePosition, t);
-            
+
             yield return null;
-        } 
+        }
+    }
+
+    public void SlideDownForDecal()
+    {
+        if (slideRoutine != null) StopCoroutine(slideRoutine);
+        slideRoutine = StartCoroutine(SlideTo(decalPosition, 0.25f));
+    }
+
+    public void SlideUpFromDecal()
+    {
+        if (slideRoutine != null) StopCoroutine(slideRoutine);
+        slideRoutine = StartCoroutine(SlideTo(isOpen ? openPosition : closePosition, 0.25f));
+    }
+
+    private IEnumerator SlideTo(Vector3 target, float duration)
+    {
+        float t = 0f;
+        Vector3 start = transform.position;
+        while (t < 1f) {
+            t += Time.deltaTime / duration;
+            transform.position = Vector3.Lerp(start, target, Mathf.SmoothStep(0f, 1f, t));
+            yield return null;
+        }
+        transform.position = target;
     }
 }

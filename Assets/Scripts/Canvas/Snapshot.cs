@@ -12,13 +12,19 @@ public class Snapshot : MonoBehaviour,
     public Material mat;
     public List<RenderTexture> capturedFrames;
     
-    RawImage display;  //UI display
-    GameObject dragProxy; // floating copy while dragging
+    RawImage display;
     Canvas canvas;
+    RectTransform rectTransform;
+    Transform originalParent;
+    Vector2 originalPosition;
+    Vector2 originalSize;
+    bool dropHandled;
+    bool inDecalMode;
 
-    [HideInInspector] public RectTransform page;      // contact strip page (drag source)
-    [HideInInspector] public RectTransform rightPage;  // replication page (drop target)
+    [HideInInspector] public RectTransform page;
+    [HideInInspector] public RectTransform rightPage;
     [HideInInspector] public ShotProjector shotProjector;
+    [HideInInspector] public Collage collage;
     
     public float snapShotSize = 0.5f;
 
@@ -33,6 +39,7 @@ public class Snapshot : MonoBehaviour,
 
     void Awake() {
         display = GetComponent<RawImage>();
+        rectTransform = GetComponent<RectTransform>();
         capturedFrames = new List<RenderTexture>();
     }
 
@@ -96,58 +103,90 @@ public class Snapshot : MonoBehaviour,
 
     public void OnBeginDrag(PointerEventData e) {
         if (capturedFrames == null || capturedFrames.Count == 0) return;
-        
-        // create a floating proxy image that follows the cursor
-        dragProxy = new GameObject("DragProxy");
-        dragProxy.transform.SetParent(canvas.transform);
-        dragProxy.transform.SetAsLastSibling(); // renders on top
-        
-        var img = dragProxy.AddComponent<RawImage>();
-        img.texture = capturedFrames[frameIndex];
-        img.raycastTarget = false; // dont block drops on slots beneath
-        
-        var rect = dragProxy.GetComponent<RectTransform>();
-        rect.sizeDelta = GetComponent<RectTransform>().sizeDelta;
+        originalParent   = rectTransform.parent;
+        originalPosition = rectTransform.localPosition;
+        originalSize     = rectTransform.sizeDelta;
+        dropHandled      = false;
+        // reparent to canvas root so it renders above everything while dragging
+        rectTransform.SetParent(canvas.transform);
+        rectTransform.SetAsLastSibling();
+        rectTransform.localScale  = Vector3.one;
+        display.raycastTarget = false; // don't intercept drops on targets beneath
     }
 
     public void OnDrag(PointerEventData e) {
-        if (dragProxy == null) return;
-        // proxy follows cursor freely across the whole canvas
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            canvas.GetComponent<RectTransform>(),
-            e.position, e.pressEventCamera,
-            out Vector2 localPos
-        );
-        dragProxy.GetComponent<RectTransform>().localPosition = localPos;
+        display.raycastTarget = false;
+        bool overUI = IsOverUI(e.position, e.pressEventCamera);
+        display.raycastTarget = false; // keep off during drag
+
+        if (overUI) {
+            if (inDecalMode) {
+                inDecalMode = false;
+                collage?.SlideUpFromDecal();
+            }
+            rectTransform.sizeDelta = originalSize;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                canvas.GetComponent<RectTransform>(),
+                e.position, e.pressEventCamera,
+                out Vector2 localPos
+            );
+            rectTransform.localPosition = Vector2.Lerp(rectTransform.localPosition, localPos, Time.deltaTime * 20f);
+        } else {
+            if (!inDecalMode) {
+                inDecalMode = true;
+                collage?.SlideDownForDecal();
+            }
+            float screenSize  = shotProjector.CaptureSize * Mathf.Min(Screen.width, Screen.height);
+            RectTransform canvasRect = canvas.GetComponent<RectTransform>();
+            float canvasUnits = screenSize * (canvasRect.rect.width / Screen.width);
+            rectTransform.sizeDelta     = Vector2.Lerp(rectTransform.sizeDelta, new Vector2(canvasUnits, canvasUnits), Time.deltaTime * 8f);
+            rectTransform.localPosition = Vector2.Lerp(rectTransform.localPosition, Vector2.zero, Time.deltaTime * 8f);
+        }
     }
 
     public void OnEndDrag(PointerEventData e) {
-        Destroy(dragProxy);
+        rectTransform.sizeDelta = originalSize;
 
-        // if dropped outside both pages, enter world decal mode
-        bool overLeft  = page      != null && RectTransformUtility.RectangleContainsScreenPoint(page,      e.position, e.pressEventCamera);
-        bool overRight = rightPage != null && RectTransformUtility.RectangleContainsScreenPoint(rightPage, e.position, e.pressEventCamera);
+        inDecalMode = false;
+        collage?.SlideUpFromDecal();
 
-        if (!overLeft && !overRight)
+        if (dropHandled) {
+            display.raycastTarget = true;
+            return;
+        }
+
+        // temporarily disable our own raycast so IsOverUI sees what's beneath us
+        display.raycastTarget = false;
+        bool overUI = IsOverUI(e.position, e.pressEventCamera);
+        display.raycastTarget = true;
+
+        if (!overUI)
             shotProjector?.ProjectDecalAtCursor(this, e.position);
+
+        rectTransform.SetParent(originalParent);
+        rectTransform.localPosition = originalPosition;
     }
 
-    // called by rightPage's IDropHandler to receive this snapshot
-    public void PlaceOnRightPage(Vector2 screenPos) {
-        transform.SetParent(rightPage);
-        page = rightPage;
+    public void NotifyDropHandled() => dropHandled = true;
 
-        RectTransformUtility.ScreenPointToLocalPointInRectangle(
-            rightPage, screenPos, null, out Vector2 localPos);
-        Vector2 half     = GetComponent<RectTransform>().sizeDelta * 0.5f;
-        Vector2 pageHalf = rightPage.rect.size * 0.5f;
-        localPos.x = Mathf.Clamp(localPos.x, -pageHalf.x + half.x, pageHalf.x - half.x);
-        localPos.y = Mathf.Clamp(localPos.y, -pageHalf.y + half.y, pageHalf.y - half.y);
-        GetComponent<RectTransform>().localPosition = localPos;
+    public void OnDrop(PointerEventData e) { }
+
+    // blank this slot in place
+    public void Clear() {
+        capturedFrames.Clear();
+        frameIndex = 0;
+        currTimer  = 0f;
+        display.texture = null;
+        display.color   = new Color(1, 1, 1, 0); // fully transparent
+        var cg = GetComponent<CanvasGroup>();
+        if (cg != null) { cg.interactable = false; cg.blocksRaycasts = false; }
     }
 
-    public void OnDrop(PointerEventData e) {
-        // right page drop, handled by PlaceOnRightPage called from the page's drop handler
+    private bool IsOverUI(Vector2 screenPos, Camera cam) {
+        var pointer = new PointerEventData(EventSystem.current) { position = screenPos };
+        var results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(pointer, results);
+        return results.Count > 0;
     }
 
     private void OnDestroy()

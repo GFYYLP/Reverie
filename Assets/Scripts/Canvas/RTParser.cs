@@ -13,6 +13,7 @@ public class RTParser : MonoBehaviour
 
     [Header("Pages")]
     [SerializeField] private RectTransform leftPage;
+    [SerializeField] private RectTransform photoStrip;
     [SerializeField] private RectTransform rightPage;
     
     [SerializeField, Range(0.1f, 1f)] private float captureSize = 0.4f;
@@ -53,13 +54,14 @@ public class RTParser : MonoBehaviour
 
         slots = new Snapshot[slotCount];
         for (int i = 0; i < slotCount; i++) {
-            GameObject obj = Instantiate(slotPrefab, leftPage != null ? leftPage : transform);
+            GameObject obj = Instantiate(slotPrefab, photoStrip != null ? photoStrip : transform);
             Snapshot snap = obj.GetComponent<Snapshot>();
             if (snap == null) { Debug.LogError($"Slot {i} prefab missing Snapshot component"); continue; }
             snap.Init(decalBaseMaterial);
-            snap.page         = leftPage  != null ? leftPage  : transform as RectTransform;
-            snap.rightPage    = rightPage != null ? rightPage : transform as RectTransform;
+            snap.page          = photoStrip != null ? photoStrip : transform as RectTransform;
+            snap.rightPage     = rightPage  != null ? rightPage  : transform as RectTransform;
             snap.shotProjector = shotProjector;
+            snap.collage       = GetComponentInParent<Collage>();
             slots[i] = snap;
         }
     }
@@ -97,7 +99,7 @@ public class RTParser : MonoBehaviour
 
             wasRecording = false;
             currTimer = 0f;
-            ++currentSlot;
+            currentSlot = (currentSlot+1) % slots.Length;
         }
     }
 
@@ -204,7 +206,9 @@ public class RTParser : MonoBehaviour
 
     public RenderTexture[] GetCapturedTextures()
     {
-        var filled = new System.Collections.Generic.List<RenderTexture>();
+        var filled = new List<RenderTexture>();
+        if (slots == null) return filled.ToArray();
+
         foreach (var slot in slots)
         {
             var frame = slot.RepresentativeFrame;
