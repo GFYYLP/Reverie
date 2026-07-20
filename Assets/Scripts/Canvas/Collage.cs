@@ -10,7 +10,7 @@ public class Collage : MonoBehaviour
     [SerializeField] private Vector3 closePosition = Vector3.zero;
     [SerializeField] private Vector3 decalPosition = Vector3.zero; // partially offscreen, still draggable back
 
-    private bool isOpen = false;
+    public bool isOpen = false;
     private Coroutine slideRoutine;
     
     // Start is called before the first frame update

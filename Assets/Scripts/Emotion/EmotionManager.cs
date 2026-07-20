@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
+[DefaultExecutionOrder(-10)]
 public class EmotionManager : MonoBehaviour
 {
     // [SerializeField] private RenderTexture sourceRT;
@@ -24,12 +25,11 @@ public class EmotionManager : MonoBehaviour
     private Grammar currGrammar;
     private GraphicsBuffer grammarBuffer;
     
-    // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         grammarBuffer = new GraphicsBuffer(
             GraphicsBuffer.Target.Structured,
-            1, 
+            1,
             Marshal.SizeOf<Grammar>()
         );
     }

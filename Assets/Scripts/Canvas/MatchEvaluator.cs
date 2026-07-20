@@ -15,9 +15,7 @@ public class MatchEvaluator : MonoBehaviour
     [SerializeField] private float edgeDensityWeight   = 1.0f;
     [SerializeField] private float isolationWeight     = 1.0f;
     [SerializeField] private float histogramWeight     = 0.5f;
-
-    [Header("Threshold")]
-    [SerializeField, Range(0f, 1f)] private float matchThreshold = 0.75f;
+    
 
     public float LastScore { get; private set; }
     public bool  LastResult { get; private set; }
@@ -65,7 +63,7 @@ public class MatchEvaluator : MonoBehaviour
 
         float totalDist = (grammarDist + histogramWeight * histDist) / (1f + histogramWeight);
         LastScore  = 1f - Mathf.Clamp01(totalDist);
-        LastResult = LastScore >= matchThreshold;
+        LastResult = LastScore >= 0.75f;
 
         onDone(LastScore, LastResult);
     }
@@ -74,13 +72,23 @@ public class MatchEvaluator : MonoBehaviour
     {
         Vector3[] corners = new Vector3[4];
         albumRect.GetWorldCorners(corners);
-        // corners: 0=BL 1=TL 2=TR 3=BR in screen space for overlay canvas
+
+        // convert world corners to screen space (handles all canvas render modes)
+        Camera cam = Camera.main;
+        for (int i = 0; i < 4; i++)
+            corners[i] = RectTransformUtility.WorldToScreenPoint(cam, corners[i]);
+
+        // corners: 0=BL 1=TL 2=TR 3=BR
         float x = corners[0].x;
         float y = corners[0].y;
         float w = corners[2].x - corners[0].x;
         float h = corners[2].y - corners[0].y;
 
-        if (w <= 0 || h <= 0) return null;
+        // clamp to screen bounds
+        x = Mathf.Clamp(x, 0, Screen.width);
+        y = Mathf.Clamp(y, 0, Screen.height);
+        w = Mathf.Clamp(w, 1, Screen.width  - x);
+        h = Mathf.Clamp(h, 1, Screen.height - y);
 
         Texture2D snap = new Texture2D((int)w, (int)h, TextureFormat.RGB24, false);
         snap.ReadPixels(new Rect(x, y, w, h), 0, 0);

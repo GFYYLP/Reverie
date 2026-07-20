@@ -5,34 +5,56 @@ using UnityEngine.UI;
 
 public class Album : MonoBehaviour, IDropHandler
 {
+    [SerializeField] private GameObject snapshotPrefab;
+    [SerializeField] private Vector2 snapshotSize = new Vector2(120f, 120f);
+    [SerializeField] private RectTransform refRecTransform;
+    private RectTransform rectTransform;
+    private Collage collage;
+    
+    [Header("Reference")]
     [SerializeField] private RawImage referenceDisplay;
     [SerializeField] private RawImage rawReference;
     [SerializeField, Range(0f, 1f)] private float referenceAlpha = 0.2f;
-    [SerializeField] private GameObject snapshotPrefab;
-    [SerializeField] private Vector2 snapshotSize = new Vector2(120f, 120f);
-
+    
+    [Header("Match Evaluation")]
     [SerializeField] private MatchEvaluator matchEvaluator;
+    [SerializeField, Range(0f, 1f)] private float matchThreshold = 0.75f;
+    [SerializeField] private float matchingCD = 4f;
     
-    private RectTransform rectTransform;
+    [Header("Notes")] 
+    [SerializeField] private HandwritingNote progressLine;
+    [SerializeField] private string[] progressNotes;
     
-    [SerializeField] private float shiftTick = 4f;
+    
 
     private float timer=0f;
 
     void Awake() {
         rectTransform = GetComponent<RectTransform>();
+        collage = GetComponentInParent(typeof(Collage)) as Collage;
+        SetReference();
     }
     
     private void LateUpdate()
     {
+        //reevalute reference match on set interval
         timer  += Time.deltaTime;
-        if (timer > shiftTick)
+        if (collage.isOpen && timer > matchingCD)
         {
-            StartCoroutine(matchEvaluator.Evaluate(rectTransform, (score, passed) => {
-                Debug.Log($"Score: {score:F2} — {(passed ? "matched" : "not yet")}");
-                // drive whatever feedback follows
+            StartCoroutine(matchEvaluator.Evaluate(refRecTransform, (score, passed) => {
+                Debug.Log($"Score: {score:F2} : {(passed ? "matched" : "not yet")}");
+                UpdateProgress(score);
             }));
         }
+    }
+
+    private void UpdateProgress(float score)
+    {
+        int noteIndex = Mathf.Min(
+            (int)(score * progressNotes.Length),
+            progressNotes.Length - 1
+        );
+        progressLine.SetNote(progressNotes[noteIndex]);
     }
 
     public void OnDrop(PointerEventData e)
@@ -78,12 +100,12 @@ public class Album : MonoBehaviour, IDropHandler
         }
     }
 
-    public void SetReference(Texture reference)
+    public void SetReference()
     {
         if (referenceDisplay == null) return;
-        referenceDisplay.texture = reference;
+        referenceDisplay.texture = referenceDisplay.mainTexture;
         referenceDisplay.color   = new Color(1, 1, 1, referenceAlpha);
         
-        matchEvaluator.UpdateReference(reference);
+        matchEvaluator.UpdateReference(rawReference.mainTexture);
     }
 }
