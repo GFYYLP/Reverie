@@ -5,15 +5,34 @@ using UnityEngine.UI;
 
 public class Album : MonoBehaviour, IDropHandler
 {
-    [SerializeField] private UnityEngine.UI.RawImage referenceDisplay;
+    [SerializeField] private RawImage referenceDisplay;
+    [SerializeField] private RawImage rawReference;
     [SerializeField, Range(0f, 1f)] private float referenceAlpha = 0.2f;
     [SerializeField] private GameObject snapshotPrefab;
     [SerializeField] private Vector2 snapshotSize = new Vector2(120f, 120f);
 
+    [SerializeField] private MatchEvaluator matchEvaluator;
+    
     private RectTransform rectTransform;
+    
+    [SerializeField] private float shiftTick = 4f;
+
+    private float timer=0f;
 
     void Awake() {
         rectTransform = GetComponent<RectTransform>();
+    }
+    
+    private void LateUpdate()
+    {
+        timer  += Time.deltaTime;
+        if (timer > shiftTick)
+        {
+            StartCoroutine(matchEvaluator.Evaluate(rectTransform, (score, passed) => {
+                Debug.Log($"Score: {score:F2} — {(passed ? "matched" : "not yet")}");
+                // drive whatever feedback follows
+            }));
+        }
     }
 
     public void OnDrop(PointerEventData e)
@@ -64,5 +83,7 @@ public class Album : MonoBehaviour, IDropHandler
         if (referenceDisplay == null) return;
         referenceDisplay.texture = reference;
         referenceDisplay.color   = new Color(1, 1, 1, referenceAlpha);
+        
+        matchEvaluator.UpdateReference(reference);
     }
 }

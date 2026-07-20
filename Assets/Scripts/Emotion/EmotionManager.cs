@@ -40,6 +40,29 @@ public class EmotionManager : MonoBehaviour
         
     }
 
+    // returns raw grammar floats without updating emotion state
+    public float[] ParseGrammarRaw(RenderTexture sourceRT)
+    {
+        int kernel = grammarShader.FindKernel("Analyze");
+        RenderTexture small = RenderTexture.GetTemporary(64, 64, 0, RenderTextureFormat.ARGB32);
+        Graphics.Blit(sourceRT, small);
+        grammarShader.SetTexture(kernel, "inputTex", small);
+        grammarShader.SetBuffer(kernel, "results", grammarBuffer);
+        grammarShader.Dispatch(kernel, 1, 1, 1);
+        RenderTexture.ReleaseTemporary(small);
+
+        Grammar[] scores = new Grammar[1];
+        grammarBuffer.GetData(scores);
+
+        return new float[] {
+            scores[0].symmetry,
+            scores[0].colorVariance,
+            scores[0].brightness,
+            scores[0].edgeDensity,
+            scores[0].isolation
+        };
+    }
+
     public void ParseGrammar(RenderTexture sourceRT)
     {
         int kernel = grammarShader.FindKernel("Analyze");
