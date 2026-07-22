@@ -21,7 +21,7 @@ public class ShotProjector : MonoBehaviour
         for (int i = 0; i < maxDecals; i++)
         {
             GameObject go = new GameObject($"ShotDecal_{i}");
-            go.transform.SetParent(transform);
+            go.transform.SetParent(null); // must not live under Collage: its slide/open/close animations would drag placed decals along with it
             DecalProjector dp = go.AddComponent<DecalProjector>();
             
             //dp.material = new Material(decalBaseMaterial);

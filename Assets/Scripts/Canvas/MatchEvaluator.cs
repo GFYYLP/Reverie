@@ -20,14 +20,26 @@ public class MatchEvaluator : MonoBehaviour
     public float LastScore { get; private set; }
     public bool  LastResult { get; private set; }
 
-    private EmotionManager emotionManager;
+    [SerializeField] private EmotionManager emotionManager;
     private float[][] referenceGrammars;
     private float[]   referenceHistogram;
 
-    void Awake()
-    {
-        emotionManager = FindFirstObjectByType<EmotionManager>();
-    }
+    [SerializeField] private RectTransform debugAlbumRect;
+    private Rect debugRect;
+
+    // void OnGUI()
+    // {
+    //     if (debugAlbumRect == null) return;
+    //     Vector3[] c = new Vector3[4];
+    //     debugAlbumRect.GetWorldCorners(c);
+    //     // GUI y is flipped
+    //     float x = c[0].x;
+    //     float y = Screen.height - c[2].y;
+    //     float w = c[2].x - c[0].x;
+    //     float h = c[2].y - c[0].y;
+    //     GUI.color = Color.red;
+    //     GUI.Box(new Rect(x, y, w, h), "album");
+    // }
 
     // call when a new level loads, reference can be any Texture (Texture2D or RT)
     public void UpdateReference(Texture reference)
@@ -73,10 +85,6 @@ public class MatchEvaluator : MonoBehaviour
         Vector3[] corners = new Vector3[4];
         albumRect.GetWorldCorners(corners);
 
-        // convert world corners to screen space (handles all canvas render modes)
-        Camera cam = Camera.main;
-        for (int i = 0; i < 4; i++)
-            corners[i] = RectTransformUtility.WorldToScreenPoint(cam, corners[i]);
 
         // corners: 0=BL 1=TL 2=TR 3=BR
         float x = corners[0].x;
@@ -90,6 +98,7 @@ public class MatchEvaluator : MonoBehaviour
         w = Mathf.Clamp(w, 1, Screen.width  - x);
         h = Mathf.Clamp(h, 1, Screen.height - y);
 
+        Debug.Log($"FlattenAlbum: screen={Screen.width}x{Screen.height} corners BL={corners[0]} TR={corners[2]} rect=({x},{y},{w},{h})");
         Texture2D snap = new Texture2D((int)w, (int)h, TextureFormat.RGB24, false);
         snap.ReadPixels(new Rect(x, y, w, h), 0, 0);
         snap.Apply();

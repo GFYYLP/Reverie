@@ -17,9 +17,9 @@ public class RoomConfig {
 
     public void UpdateScores()
     {
-        float content = Emotion.Instance.content;
-        float unease = Emotion.Instance.unease;
-        float awe = Emotion.Instance.awe;
+        float content = Emotion.Instance.content*0.05f;
+        float unease = Emotion.Instance.unease*1.0f;
+        float awe = Emotion.Instance.awe*1.0f;
         float intensity = Emotion.Instance.intensity;
 
         seed = Random.value * 9973f; // fresh scatter each room
@@ -27,7 +27,7 @@ public class RoomConfig {
         // Derive hue from seed, excluding yellow-green band (70°–130° = 0.194–0.361)
         // which reads as sickly/unnatural when used as ambient neutral tint.
         float t = Mathf.Repeat(seed * 0.731f, 0.833f);
-        roomHue = t < 0.194f ? t : t + 0.167f;
+        roomHue = 0f;// < 0.194f ? t : t + 0.167f;
 
         //adjust room config following the emotions
         float nudge = Mathf.Lerp(0.05f, 0.45f, intensity);

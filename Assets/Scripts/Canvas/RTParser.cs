@@ -95,11 +95,12 @@ public class RTParser : MonoBehaviour
         else
         {
             //if previously not recording, take a screenshot
-            if (!wasRecording) StartCoroutine(CaptureView(slots[currentSlot])); 
+            if (!wasRecording) StartCoroutine(CaptureView(slots[currentSlot]));
 
             wasRecording = false;
             currTimer = 0f;
-            currentSlot = (currentSlot+1) % slots.Length;
+            currentSlot = (currentSlot + 1) % slots.Length;
+            slots[currentSlot].Clear(); // clear whatever was there
         }
     }
 

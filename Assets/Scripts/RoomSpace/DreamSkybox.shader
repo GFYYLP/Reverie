@@ -71,6 +71,7 @@ Shader "Whitespace/DreamSkybox"
                 //content warms this fade toward its tint.
                 float heightFade = pow(1.0 - saturate(abs(dir.y)), _FadeSpread);
                 col.rgb = lerp(_FadeTint.rgb, col.rgb, heightFade) * 6.0;
+                col.a *= 0.7;
                 return col;
             }
             ENDHLSL

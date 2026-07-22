@@ -251,7 +251,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.9490196, g: 0.94509804, b: 0.8784314, a: 1}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -290,19 +290,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   snapshotPrefab: {fileID: 8092729888317412813, guid: 9db5854dd61bdcb40b0f65f56599b8de,
     type: 3}
-  snapshotSize: {x: 20, y: 20}
+  snapshotSize: {x: 15, y: 17}
   refRecTransform: {fileID: 1401082297}
   referenceDisplay: {fileID: 1401082298}
   rawReference: {fileID: 1401082298}
   referenceAlpha: 0.2
   matchEvaluator: {fileID: 79206773}
   matchThreshold: 0.75
-  matchingCD: 4
+  matchingCD: 5
   progressLine: {fileID: 502115019}
   progressNotes:
-  - '"Hello"'
-  - '"Hi"'
-  - '"Almost :)"'
+  - not yet, okay?
+  - close but not???
+  - hello everyone...
+  - you win :))
 --- !u!114 &79206773
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -323,6 +324,8 @@ MonoBehaviour:
   edgeDensityWeight: 1
   isolationWeight: 1
   histogramWeight: 0.5
+  emotionManager: {fileID: 249626269}
+  debugAlbumRect: {fileID: 1401082297}
 --- !u!1 &181052151
 GameObject:
   m_ObjectHideFlags: 0
@@ -794,9 +797,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c0e0110f027d4e8cad5aeac738cfa479, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  content: 20
-  unease: 20
-  awe: 20
+  content: 10
+  unease: 10
+  awe: 10
   intensity: 20
 --- !u!1 &330585543
 GameObject:
@@ -1135,7 +1138,7 @@ Light:
   m_LightShadowCasterMode: 0
   m_AreaSize: {x: 1, y: 1}
   m_BounceIntensity: 1
-  m_ColorTemperature: 4000
+  m_ColorTemperature: 7103
   m_UseColorTemperature: 1
   m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
   m_UseBoundingSphereOverride: 0
@@ -1335,11 +1338,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ee3160f760207844faed3b72180e819a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  baseLetterDelay: 0.06
-  eraseLetterDelay: 0.03
+  baseLetterDuration: 0.018
+  eraseLetterDuration: 0.01
+  revealSharpness: 3.5
+  revealDiagonal: 1
   maxPositionJitter: 4
   maxRotationJitter: 3
   jitterSpeed: 8
+  driftBaselineAmplitude: 2.5
+  driftSlantAmplitude: 2
+  driftSpeed: 0.06
   minAlpha: 0.6
 --- !u!114 &502115020
 MonoBehaviour:
@@ -1363,8 +1371,9 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 55205f4bc97fadd4da7377fbdfe1bb1f, type: 2}
+  m_sharedMaterial: {fileID: -2361419059656599163, guid: 55205f4bc97fadd4da7377fbdfe1bb1f,
+    type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -2389,7 +2398,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Texture: {fileID: 2800000, guid: cbc5c6bfa666eab4290e4acef78d7ab3, type: 3}
+  m_Texture: {fileID: 2800000, guid: 1b3d19b62d7e6634fb8041dc03c8c928, type: 3}
   m_UVRect:
     serializedVersion: 2
     x: 0
@@ -3707,7 +3716,7 @@ RectTransform:
   m_GameObject: {fileID: 2110975540}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.2, y: 1.2, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 79206769}
@@ -3732,9 +3741,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9bfa8687082b5b046a0bb7b23d15e570, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  openPosition: {x: 800, y: 185, z: 1}
-  closePosition: {x: 800, y: -350, z: 0}
+  openPosition: {x: 450, y: 200, z: 1}
+  closePosition: {x: 450, y: -410, z: 0}
   decalPosition: {x: 0, y: 0, z: 0}
+  isOpen: 0
 --- !u!1 &2133109460
 GameObject:
   m_ObjectHideFlags: 0
@@ -3801,10 +3811,10 @@ SceneRoots:
   m_Roots:
   - {fileID: 410087041}
   - {fileID: 832575519}
+  - {fileID: 249626270}
   - {fileID: 1383670678}
   - {fileID: 909999516}
   - {fileID: 234573301}
-  - {fileID: 249626270}
   - {fileID: 1580314732}
   - {fileID: 243765493}
   - {fileID: 191975848}

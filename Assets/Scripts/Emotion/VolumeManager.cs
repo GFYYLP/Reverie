@@ -38,11 +38,11 @@ public class VolumeManager : MonoBehaviour
     void UpdateVolumeParameters(float content, float unease,  float awe)
     {
         //emission tinted by room hue 
-        float emitHue = Mathf.Repeat(roomHue - content * 0.05f, 1f);  //content warms
-        float emitSat = Mathf.Clamp01(0.5f - unease * 0.3f);        //unease suppresses
-        Color emissionColor = Color.HSVToRGB(emitHue, emitSat, 1f) * content * 0.3f;
-        roomRenderer.material.EnableKeyword("_EMISSION");
-        roomRenderer.material.SetColor("_EmissionColor", emissionColor);
+        // float emitHue = Mathf.Repeat(roomHue - content * 0.05f, 1f);  //content warms
+        // float emitSat = Mathf.Clamp01(0.5f - unease * 0.3f);        //unease suppresses
+        // Color emissionColor = Color.HSVToRGB(emitHue, emitSat, 1f) * content * 0.3f;
+        // roomRenderer.material.EnableKeyword("_EMISSION");
+        // roomRenderer.material.SetColor("_EmissionColor", emissionColor);
 
 
         if (volume.profile.TryGet<Bloom>(out var bloom)) {
@@ -54,12 +54,12 @@ public class VolumeManager : MonoBehaviour
         //unease drains the world of color
         //content restores it, then keeps climbing past "cozy" into something oversaturated and artificial
         if (volume.profile.TryGet<ColorAdjustments>(out var color)) {
-            color.saturation.value = Mathf.Lerp(-60f, 50f, Mathf.Clamp01(content - unease * 0.8f));
-            
-            float hue = Mathf.Repeat(roomHue - content * 0.04f, 1f); //content nudges slightly warmer
+            color.saturation.value = Mathf.Lerp(-100f, 100f, Mathf.Clamp01(content - unease * 0.8f));
+
+            float hue = roomHue;//Mathf.Repeat(roomHue - content * 0.04f, 1f); //content nudges slightly warmer
             float sat = Mathf.Clamp01(0.2f + content * 0.2f - unease * 0.15f);
             float val = Mathf.Clamp01(1f - unease * 0.12f + content * 0.1f);
-            color.colorFilter.value = Color.HSVToRGB(hue, sat, val);
+            //color.colorFilter.value = Color.HSVToRGB(hue, sat, val);
             
             color.contrast.value = Mathf.Lerp(0f, contrastVal, unease);
             color.postExposure.value = content * 0.35f; 
@@ -69,9 +69,9 @@ public class VolumeManager : MonoBehaviour
         //highlights turned inside out, flickering
         if (volume.profile.TryGet<ShadowsMidtonesHighlights>(out var smh)) {
             float flicker = 1f - Mathf.PerlinNoise(Time.time, 0f) * unease * 0.5f;
-            float highlightScalar = Mathf.Clamp01(1f - unease * flicker);
+            float highlightScalar = Mathf.Clamp01(1f - unease);// * flicker);
             smh.highlights.value = new Vector4(highlightScalar, highlightScalar, highlightScalar, 0f);
-            smh.highlightsEnd.value = Mathf.Lerp(1f, 0.45f, unease);
+            smh.highlightsEnd.value = Mathf.Lerp(1f, 0.45f, unease * 0.8f);
         }
 
         //psychological fringing

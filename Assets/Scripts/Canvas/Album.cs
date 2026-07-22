@@ -24,28 +24,32 @@ public class Album : MonoBehaviour, IDropHandler
     [Header("Notes")] 
     [SerializeField] private HandwritingNote progressLine;
     [SerializeField] private string[] progressNotes;
-    
-    
+
+    public static Album Instance { get; private set; }
 
     private float timer=0f;
+    
+    
 
     void Awake() {
+        Instance = this;
+        
         rectTransform = GetComponent<RectTransform>();
         collage = GetComponentInParent(typeof(Collage)) as Collage;
         SetReference();
     }
     
-    private void LateUpdate()
+    public void EvaluateMatch()
     {
         //reevalute reference match on set interval
-        timer  += Time.deltaTime;
-        if (collage.isOpen && timer > matchingCD)
-        {
+        // timer  += Time.deltaTime;
+        // if (collage.isOpen && timer > matchingCD)
+        // {
             StartCoroutine(matchEvaluator.Evaluate(refRecTransform, (score, passed) => {
                 Debug.Log($"Score: {score:F2} : {(passed ? "matched" : "not yet")}");
                 UpdateProgress(score);
             }));
-        }
+        // }
     }
 
     private void UpdateProgress(float score)
@@ -84,6 +88,7 @@ public class Album : MonoBehaviour, IDropHandler
             copy.page      = rectTransform;
             copy.rightPage = rectTransform;
             copy.shotProjector = source.shotProjector;
+            copy.collage   = source.collage;
             copy.Init(source.decalBaseMaterial);
 
             copy.capturedFrames = new List<UnityEngine.RenderTexture>(source.capturedFrames);
